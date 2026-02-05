@@ -1,39 +1,99 @@
-import { User, Settings, HelpCircle, LogOut, ChevronRight } from "lucide-react";
+import { Bell, Settings, HelpCircle, User, Shield, Users, UserPlus, Gift, BookOpen, LogOut, ChevronRight, Check, ArrowLeftRight, Briefcase, Contact } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
-const menuItems = [
-  { icon: User, label: "Προσωπικά στοιχεία" },
-  { icon: Settings, label: "Ρυθμίσεις" },
-  { icon: HelpCircle, label: "Βοήθεια" },
+const settingsItems = [
+  { icon: Settings, label: "Ρυθμίσεις λογαριασμού" },
+  { icon: HelpCircle, label: "Βρείτε βοήθεια" },
+  { icon: User, label: "Προβολή προφίλ" },
+  { icon: Shield, label: "Απόρρητο" },
+  { icon: Users, label: "Συστήστε έναν οικοδεσπότη" },
+  { icon: UserPlus, label: "Βρείτε έναν συνοικοδεσπότη" },
+  { icon: Gift, label: "Δωροκάρτες" },
+  { icon: BookOpen, label: "Νομικό τμήμα" },
 ];
 
 const Profile = () => {
   return (
-    <div className="px-4 py-6">
-      <h1 className="text-2xl font-bold text-foreground mb-6">Προφίλ</h1>
+    <div className="px-4 py-6 pb-24">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-foreground">Προφίλ</h1>
+        <button className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-muted transition-colors">
+          <Bell className="w-6 h-6 text-foreground" />
+        </button>
+      </div>
       
       {/* Profile Card */}
-      <div className="flex items-center gap-4 p-4 bg-card rounded-xl border border-divider mb-6">
-        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-          <User className="w-8 h-8 text-muted-foreground" />
+      <div className="bg-card rounded-2xl shadow-lg p-6 mb-6 flex flex-col items-center">
+        <div className="relative mb-4">
+          <Avatar className="w-24 h-24 border-4 border-background shadow-md">
+            <AvatarImage src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face" alt="Panagiotis" />
+            <AvatarFallback className="text-2xl font-semibold bg-muted">Π</AvatarFallback>
+          </Avatar>
+          {/* Verification Badge */}
+          <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-primary rounded-full flex items-center justify-center border-2 border-background">
+            <Check className="w-4 h-4 text-primary-foreground" strokeWidth={3} />
+          </div>
         </div>
-        <div className="flex-1">
-          <h2 className="text-lg font-semibold text-foreground">Επισκέπτης</h2>
-          <p className="text-sm text-muted-foreground">Σύνδεση ή εγγραφή</p>
-        </div>
-        <ChevronRight className="w-5 h-5 text-muted-foreground" />
+        <h2 className="text-xl font-bold text-foreground mb-1">Panagiotis</h2>
+        <p className="text-sm text-muted-foreground">Επισκέπτης</p>
       </div>
 
-      {/* Menu Items */}
-      <div className="space-y-1">
-        {menuItems.map((item) => {
+      {/* Action Grid */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        {/* Previous Trips Card */}
+        <div className="relative bg-card rounded-2xl p-4 shadow-sm border border-border">
+          <Badge className="absolute top-3 right-3 bg-blue-500 text-white text-[10px] px-2 py-0.5 hover:bg-blue-500">
+            ΝΕΑ
+          </Badge>
+          <div className="mb-3 h-16 flex items-center justify-center">
+            <Briefcase className="w-12 h-12 text-primary opacity-80" />
+          </div>
+          <h3 className="text-sm font-semibold text-foreground">Προηγούμενα ταξίδια</h3>
+        </div>
+
+        {/* Contacts Card */}
+        <div className="relative bg-card rounded-2xl p-4 shadow-sm border border-border">
+          <Badge className="absolute top-3 right-3 bg-blue-500 text-white text-[10px] px-2 py-0.5 hover:bg-blue-500">
+            ΝΕΑ
+          </Badge>
+          <div className="mb-3 h-16 flex items-center justify-center">
+            <Contact className="w-12 h-12 text-primary opacity-80" />
+          </div>
+          <h3 className="text-sm font-semibold text-foreground">Επαφές</h3>
+        </div>
+      </div>
+
+      {/* Host Promotion Banner */}
+      <div className="bg-gradient-to-r from-secondary to-muted rounded-2xl p-5 mb-6 flex items-center gap-4 border border-border">
+        <div className="flex-1">
+          <h3 className="text-base font-bold text-foreground mb-1">Γίνετε οικοδεσπότης</h3>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Νοικιάστε το σπίτι σας και κερδίστε επιπλέον έσοδα
+          </p>
+        </div>
+        <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center">
+          <svg viewBox="0 0 24 24" className="w-10 h-10 text-primary" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <polyline points="9 22 9 12 15 12 15 22" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Settings List */}
+      <div className="bg-card rounded-2xl border border-border overflow-hidden mb-6">
+        {settingsItems.map((item, index) => {
           const Icon = item.icon;
           return (
             <button
               key={item.label}
-              className="w-full flex items-center gap-4 p-4 hover:bg-muted rounded-xl transition-colors"
+              className={`w-full flex items-center gap-4 px-4 py-4 hover:bg-muted transition-colors ${
+                index !== settingsItems.length - 1 ? "border-b border-border" : ""
+              }`}
             >
-              <Icon className="w-6 h-6 text-foreground" />
-              <span className="flex-1 text-left text-foreground font-medium">
+              <Icon className="w-5 h-5 text-muted-foreground" />
+              <span className="flex-1 text-left text-foreground font-medium text-sm">
                 {item.label}
               </span>
               <ChevronRight className="w-5 h-5 text-muted-foreground" />
@@ -43,10 +103,16 @@ const Profile = () => {
       </div>
 
       {/* Logout Button */}
-      <div className="mt-8 pt-6 border-t border-divider">
-        <button className="flex items-center gap-4 p-4 text-destructive hover:bg-muted rounded-xl transition-colors w-full">
-          <LogOut className="w-6 h-6" />
-          <span className="font-medium">Αποσύνδεση</span>
+      <button className="w-full flex items-center gap-4 px-4 py-4 text-destructive hover:bg-destructive/10 rounded-xl transition-colors">
+        <LogOut className="w-5 h-5" />
+        <span className="font-medium text-sm">Αποσύνδεση</span>
+      </button>
+
+      {/* Floating Host Mode Toggle */}
+      <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40">
+        <button className="flex items-center gap-2 bg-foreground text-background px-5 py-3 rounded-full shadow-lg hover:bg-foreground/90 transition-colors">
+          <ArrowLeftRight className="w-4 h-4" />
+          <span className="text-sm font-medium">Λειτουργία φιλοξενίας</span>
         </button>
       </div>
     </div>
