@@ -110,7 +110,10 @@ const Profile = () => {
 
       {/* Floating Host Mode Toggle */}
       <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40">
-        <button className="flex items-center gap-2 bg-foreground text-background px-5 py-3 rounded-full shadow-lg hover:bg-foreground/90 transition-colors">
+        <button 
+          onClick={() => window.location.href = '/host'}
+          className="flex items-center gap-2 bg-foreground text-background px-5 py-3 rounded-full shadow-lg hover:bg-foreground/90 transition-colors"
+        >
           <ArrowLeftRight className="w-4 h-4" />
           <span className="text-sm font-medium">Λειτουργία φιλοξενίας</span>
         </button>
