@@ -1,6 +1,7 @@
 import { Bell, Settings, BookOpen, Plus, LogOut, ChevronRight, Home } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const menuItems = [
   { icon: Settings, label: "Ρυθμίσεις λογαριασμού" },
@@ -9,6 +10,7 @@ const menuItems = [
 ];
 
 const HostMenu = () => {
+  const navigate = useNavigate();
   return (
     <div className="px-4 py-6">
       {/* Header */}
@@ -50,6 +52,11 @@ const HostMenu = () => {
           return (
             <button
               key={item.label}
+              onClick={() => {
+                if (item.label === "Δημιουργήστε μια νέα καταχώρηση") {
+                  navigate("/host/create-listing");
+                }
+              }}
               className={`w-full flex items-center gap-4 px-4 py-4 hover:bg-muted transition-colors ${
                 index !== menuItems.length - 1 ? "border-b border-border" : ""
               }`}

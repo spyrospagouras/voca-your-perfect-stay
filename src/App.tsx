@@ -15,6 +15,7 @@ import HostCalendar from "./pages/host/HostCalendar";
 import HostListings from "./pages/host/HostListings";
 import HostMessages from "./pages/host/HostMessages";
 import HostMenu from "./pages/host/HostMenu";
+import CreateListing from "./pages/host/CreateListing";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="listings" element={<HostListings />} />
             <Route path="messages" element={<HostMessages />} />
             <Route path="menu" element={<HostMenu />} />
+            <Route path="create-listing" element={<CreateListing />} />
           </Route>
 
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
