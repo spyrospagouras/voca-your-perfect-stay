@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { X, Search, Clock, Navigation, MapPin, ChevronRight, Calendar, Users, Minus, Plus } from "lucide-react";
+import DateCalendar from "@/components/search/DateCalendar";
 
 const tabs = ["Καταλύματα", "Εμπειρίες", "Υπηρεσίες"];
+const DATE_TABS = ["Ημερομηνίες", "Μήνες", "Έχω ευελιξία"];
+const FLEX_OPTIONS = ["Ακριβείς ημερομηνίες", "± 1 ημέρα", "± 2 ημέρες"];
 
 interface GuestCounts {
   adults: number;
@@ -11,24 +14,27 @@ interface GuestCounts {
   pets: number;
 }
 
+const isSameDay = (a: Date, b: Date) =>
+  a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+
+const formatDateShort = (d: Date) => `${d.getDate()}/${d.getMonth() + 1}`;
+
 const SearchOverlay = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("Καταλύματα");
   const [query, setQuery] = useState("");
   const [expandedSection, setExpandedSection] = useState<"where" | "when" | "who" | null>("where");
   const [guests, setGuests] = useState<GuestCounts>({ adults: 0, children: 0, infants: 0, pets: 0 });
+  const [dateTab, setDateTab] = useState("Ημερομηνίες");
+  const [flexibility, setFlexibility] = useState("Ακριβείς ημερομηνίες");
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
 
   const updateGuest = (key: keyof GuestCounts, delta: number) => {
     setGuests((prev) => {
       const next = { ...prev, [key]: Math.max(0, prev[key] + delta) };
-      // Ensure at least 1 adult if any other category > 0
-      if (key !== "adults" && next[key] > 0 && next.adults === 0) {
-        next.adults = 1;
-      }
-      // Don't allow adults below 1 if others are selected
-      if (key === "adults" && next.adults === 0 && (next.children > 0 || next.infants > 0 || next.pets > 0)) {
-        next.adults = 1;
-      }
+      if (key !== "adults" && next[key] > 0 && next.adults === 0) next.adults = 1;
+      if (key === "adults" && next.adults === 0 && (next.children > 0 || next.infants > 0 || next.pets > 0)) next.adults = 1;
       return next;
     });
   };
@@ -36,11 +42,20 @@ const SearchOverlay = () => {
   const clearAll = () => {
     setGuests({ adults: 0, children: 0, infants: 0, pets: 0 });
     setQuery("");
+    setStartDate(null);
+    setEndDate(null);
+    setFlexibility("Ακριβείς ημερομηνίες");
   };
 
   const totalGuests = guests.adults + guests.children;
   const guestSummary = totalGuests > 0
     ? `${totalGuests} επισκέπτ${totalGuests === 1 ? "ης" : "ες"}${guests.infants > 0 ? `, ${guests.infants} βρέφ${guests.infants === 1 ? "ος" : "η"}` : ""}${guests.pets > 0 ? `, ${guests.pets} κατοικίδι${guests.pets === 1 ? "ο" : "α"}` : ""}`
+    : "";
+
+  const dateSummary = startDate
+    ? endDate && !isSameDay(startDate, endDate)
+      ? `${formatDateShort(startDate)} – ${formatDateShort(endDate)}`
+      : formatDateShort(startDate)
     : "";
 
   return (
@@ -127,15 +142,69 @@ const SearchOverlay = () => {
         {/* When */}
         {expandedSection === "when" ? (
           <div className="bg-card rounded-[24px] shadow-sm border border-border p-5">
-            <h2 className="text-[22px] font-bold text-foreground mb-3">Πότε;</h2>
-            <p className="text-sm text-muted-foreground">Προσθέστε ημερομηνίες</p>
+            <h2 className="text-[22px] font-bold text-foreground mb-4">Πότε;</h2>
+
+            {/* Date type tabs */}
+            <div className="flex bg-muted rounded-full p-1 mb-5">
+              {DATE_TABS.map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setDateTab(t)}
+                  className={`flex-1 text-xs font-medium py-2 rounded-full transition-colors ${
+                    dateTab === t ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
+                  }`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+
+            {/* Calendar */}
+            <DateCalendar
+              startDate={startDate}
+              endDate={endDate}
+              onSelect={(s, e) => { setStartDate(s); setEndDate(e); }}
+            />
+
+            {/* Flexibility pills */}
+            <div className="flex gap-2 mt-5 overflow-x-auto pb-1">
+              {FLEX_OPTIONS.map((opt) => (
+                <button
+                  key={opt}
+                  onClick={() => setFlexibility(opt)}
+                  className={`whitespace-nowrap text-xs font-medium px-4 py-2 rounded-full border transition-colors ${
+                    flexibility === opt
+                      ? "bg-foreground text-background border-foreground"
+                      : "bg-background text-foreground border-border"
+                  }`}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
+
+            {/* Section footer */}
+            <div className="flex items-center justify-between mt-5 pt-4 border-t border-border">
+              <button
+                onClick={() => { setStartDate(null); setEndDate(null); }}
+                className="text-sm font-semibold text-foreground underline"
+              >
+                Επαναφορά
+              </button>
+              <button
+                onClick={() => setExpandedSection("who")}
+                className="bg-foreground text-background rounded-lg px-6 py-3 text-sm font-semibold hover:opacity-90 transition-opacity"
+              >
+                Επόμενο
+              </button>
+            </div>
           </div>
         ) : (
           <button onClick={() => setExpandedSection("when")} className="w-full bg-card rounded-2xl shadow-sm border border-border px-5 py-4 flex items-center justify-between">
             <span className="text-sm font-semibold text-foreground">Πότε;</span>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Calendar className="w-4 h-4" />
-              <span>Προσθέστε ημερομηνίες</span>
+              <span>{dateSummary || "Προσθέστε ημερομηνίες"}</span>
             </div>
           </button>
         )}
