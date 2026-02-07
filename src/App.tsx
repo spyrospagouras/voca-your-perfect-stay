@@ -22,6 +22,7 @@ import SearchResults from "./pages/SearchResults";
 import HostMessages from "./pages/host/HostMessages";
 import HostMenu from "./pages/host/HostMenu";
 import CreateListing from "./pages/host/CreateListing";
+import PartnerOnboarding from "./pages/host/PartnerOnboarding";
 import Chat from "./pages/Chat";
 import ListingDetail from "./pages/ListingDetail";
 import NotFound from "./pages/NotFound";
@@ -62,6 +63,7 @@ const App = () => (
               <Route path="menu" element={<HostMenu />} />
               <Route path="create-listing" element={<CreateListing />} />
             </Route>
+            <Route path="/host/onboarding" element={<PartnerOnboarding />} />
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

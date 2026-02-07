@@ -35,7 +35,7 @@ const HostMenu = () => {
             <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
               Μάθετε πώς να διαχειρίζεστε τις καταχωρήσεις σας και να υποδέχεστε επισκέπτες
             </p>
-            <Button className="rounded-full px-6">
+            <Button className="rounded-full px-6" onClick={() => navigate("/host/onboarding")}>
               Ξεκινήστε
             </Button>
           </div>

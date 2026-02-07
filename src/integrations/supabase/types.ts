@@ -105,6 +105,7 @@ export type Database = {
           location_name: string | null
           longitude: number | null
           price_per_night: number | null
+          property_type: string | null
           rating: number | null
           title: string
         }
@@ -118,6 +119,7 @@ export type Database = {
           location_name?: string | null
           longitude?: number | null
           price_per_night?: number | null
+          property_type?: string | null
           rating?: number | null
           title: string
         }
@@ -131,6 +133,7 @@ export type Database = {
           location_name?: string | null
           longitude?: number | null
           price_per_night?: number | null
+          property_type?: string | null
           rating?: number | null
           title?: string
         }

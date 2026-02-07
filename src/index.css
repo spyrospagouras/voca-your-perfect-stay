@@ -40,6 +40,8 @@
     --nav-active: 349 100% 59%;
     --nav-inactive: 0 0% 45%;
     --divider: 0 0% 92%;
+    --partner-blue: 217 91% 60%;
+    --partner-blue-foreground: 0 0% 100%;
     
     /* Shadows */
     --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.05);
