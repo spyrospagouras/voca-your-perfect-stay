@@ -2,11 +2,13 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import ListingGallery from "@/components/listing/ListingGallery";
-import ListingInfo from "@/components/listing/ListingInfo";
+import ListingHostSection from "@/components/listing/ListingHostSection";
+import ListingSpecs from "@/components/listing/ListingSpecs";
 import ListingContact from "@/components/listing/ListingContact";
 import BookingBar from "@/components/listing/BookingBar";
 import { ArrowLeft, Heart, Share2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
 
 const ListingDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -29,11 +31,19 @@ const ListingDetail = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <Skeleton className="w-full h-72 rounded-none" />
-        <div className="p-4 space-y-4">
-          <Skeleton className="h-8 w-3/4" />
+        <Skeleton className="w-full h-80 rounded-none" />
+        <div className="p-5 space-y-4">
+          <Skeleton className="h-7 w-3/4" />
           <Skeleton className="h-4 w-1/2" />
-          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-4 w-2/3" />
+          <Skeleton className="h-px w-full" />
+          <div className="flex items-center gap-3">
+            <Skeleton className="w-12 h-12 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -47,27 +57,26 @@ const ListingDetail = () => {
     );
   }
 
-  const hostName =
-    (listing.profiles as any)?.full_name || "Οικοδεσπότης";
-  const images = listing.images?.length
-    ? listing.images
-    : ["/placeholder.svg"];
+  const host = listing.profiles as any;
+  const hostName = host?.full_name || "Οικοδεσπότης";
+  const hostAvatar = host?.avatar_url || null;
+  const images = listing.images?.length ? listing.images : ["/placeholder.svg"];
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      {/* Top floating nav */}
+    <div className="min-h-screen bg-background pb-28">
+      {/* Floating top nav */}
       <div className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-4 pt-3 pb-2 safe-top">
         <button
           onClick={() => navigate(-1)}
-          className="w-9 h-9 rounded-full bg-background/80 backdrop-blur flex items-center justify-center shadow-sm"
+          className="w-9 h-9 rounded-full bg-background/80 backdrop-blur-md flex items-center justify-center shadow-sm border border-border"
         >
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <div className="flex gap-2">
-          <button className="w-9 h-9 rounded-full bg-background/80 backdrop-blur flex items-center justify-center shadow-sm">
+          <button className="w-9 h-9 rounded-full bg-background/80 backdrop-blur-md flex items-center justify-center shadow-sm border border-border">
             <Share2 className="w-4 h-4 text-foreground" />
           </button>
-          <button className="w-9 h-9 rounded-full bg-background/80 backdrop-blur flex items-center justify-center shadow-sm">
+          <button className="w-9 h-9 rounded-full bg-background/80 backdrop-blur-md flex items-center justify-center shadow-sm border border-border">
             <Heart className="w-4 h-4 text-foreground" />
           </button>
         </div>
@@ -77,10 +86,10 @@ const ListingDetail = () => {
       <ListingGallery images={images} />
 
       {/* Content */}
-      <div className="px-4 pt-5 space-y-6">
-        {/* Title block */}
+      <div className="px-5 pt-5 space-y-5">
+        {/* Title & rating */}
         <div>
-          <h1 className="text-xl font-semibold text-foreground leading-tight">
+          <h1 className="text-xl font-bold text-foreground leading-tight">
             {listing.title}
           </h1>
           {listing.location_name && (
@@ -88,26 +97,34 @@ const ListingDetail = () => {
               {listing.location_name}
             </p>
           )}
-          {listing.rating !== null && (
-            <p className="text-sm text-foreground mt-1">
-              ★ {listing.rating}
-            </p>
-          )}
         </div>
 
-        <div className="h-px bg-divider" />
+        {/* Specs */}
+        <ListingSpecs rating={listing.rating} />
 
-        {/* Info section */}
-        <ListingInfo
-          title={listing.title}
+        <Separator className="bg-divider" />
+
+        {/* Host */}
+        <ListingHostSection
           hostName={hostName}
-          location={listing.location_name}
-          description={listing.description}
+          avatarUrl={hostAvatar}
         />
 
-        <div className="h-px bg-divider" />
+        <Separator className="bg-divider" />
 
-        {/* Contact section */}
+        {/* Description */}
+        {listing.description && (
+          <>
+            <div>
+              <p className="text-sm text-foreground leading-relaxed">
+                {listing.description}
+              </p>
+            </div>
+            <Separator className="bg-divider" />
+          </>
+        )}
+
+        {/* Contact & Location */}
         <ListingContact />
       </div>
 

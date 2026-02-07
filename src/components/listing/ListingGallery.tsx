@@ -42,8 +42,15 @@ const ListingGallery = ({ images }: ListingGalleryProps) => {
         </div>
       </div>
 
-      {/* Dots */}
+      {/* Image counter badge */}
       {images.length > 1 && (
+        <div className="absolute bottom-3 right-3 bg-foreground/70 backdrop-blur-sm text-primary-foreground text-xs font-medium px-2.5 py-1 rounded-full">
+          {current + 1}/{images.length}
+        </div>
+      )}
+
+      {/* Dots */}
+      {images.length > 1 && images.length <= 8 && (
         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
           {images.map((_, i) => (
             <span
