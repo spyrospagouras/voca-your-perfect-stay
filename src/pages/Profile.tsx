@@ -1,6 +1,9 @@
 import { Bell, Settings, HelpCircle, User, Shield, Users, UserPlus, Gift, BookOpen, LogOut, ChevronRight, Check, ArrowLeftRight, Briefcase, Contact } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const settingsItems = [
   { icon: Settings, label: "Ρυθμίσεις λογαριασμού" },
@@ -14,6 +17,51 @@ const settingsItems = [
 ];
 
 const Profile = () => {
+  const { user, profile, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await signOut();
+    toast.success("Αποσυνδεθήκατε");
+    navigate("/");
+  };
+
+  // Not logged in – show login prompt
+  if (!user) {
+    return (
+      <div className="px-4 py-6 pb-24">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold text-foreground">Προφίλ</h1>
+        </div>
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="w-20 h-20 rounded-full bg-secondary flex items-center justify-center mb-6">
+            <User className="w-10 h-10 text-muted-foreground" />
+          </div>
+          <h2 className="text-xl font-bold text-foreground mb-2">Συνδεθείτε</h2>
+          <p className="text-muted-foreground text-sm max-w-xs mb-6">
+            Συνδεθείτε για να διαχειριστείτε τα ταξίδια, τα αγαπημένα σας και πολλά άλλα.
+          </p>
+          <button
+            onClick={() => navigate("/login")}
+            className="bg-primary text-primary-foreground px-8 py-3 rounded-xl font-semibold text-sm"
+          >
+            Σύνδεση
+          </button>
+          <p className="text-sm text-muted-foreground mt-4">
+            Δεν έχετε λογαριασμό;{" "}
+            <button onClick={() => navigate("/signup")} className="text-primary font-semibold">
+              Εγγραφή
+            </button>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const displayName = profile?.full_name || user.email?.split("@")[0] || "Χρήστης";
+  const initials = displayName.charAt(0).toUpperCase();
+  const roleLabel = profile?.role === "host" ? "Οικοδεσπότης" : "Επισκέπτης";
+
   return (
     <div className="px-4 py-6 pb-24">
       {/* Header */}
@@ -28,21 +76,21 @@ const Profile = () => {
       <div className="bg-card rounded-2xl shadow-lg p-6 mb-6 flex flex-col items-center">
         <div className="relative mb-4">
           <Avatar className="w-24 h-24 border-4 border-background shadow-md">
-            <AvatarImage src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face" alt="Panagiotis" />
-            <AvatarFallback className="text-2xl font-semibold bg-muted">Π</AvatarFallback>
+            <AvatarImage src={profile?.avatar_url ?? undefined} alt={displayName} />
+            <AvatarFallback className="text-2xl font-semibold bg-muted">{initials}</AvatarFallback>
           </Avatar>
-          {/* Verification Badge */}
-          <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-primary rounded-full flex items-center justify-center border-2 border-background">
-            <Check className="w-4 h-4 text-primary-foreground" strokeWidth={3} />
-          </div>
+          {profile?.is_verified && (
+            <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-primary rounded-full flex items-center justify-center border-2 border-background">
+              <Check className="w-4 h-4 text-primary-foreground" strokeWidth={3} />
+            </div>
+          )}
         </div>
-        <h2 className="text-xl font-bold text-foreground mb-1">Panagiotis</h2>
-        <p className="text-sm text-muted-foreground">Επισκέπτης</p>
+        <h2 className="text-xl font-bold text-foreground mb-1">{displayName}</h2>
+        <p className="text-sm text-muted-foreground">{roleLabel}</p>
       </div>
 
       {/* Action Grid */}
       <div className="grid grid-cols-2 gap-4 mb-6">
-        {/* Previous Trips Card */}
         <div className="relative bg-card rounded-2xl p-4 shadow-sm border border-border">
           <Badge className="absolute top-3 right-3 bg-blue-500 text-white text-[10px] px-2 py-0.5 hover:bg-blue-500">
             ΝΕΑ
@@ -52,8 +100,6 @@ const Profile = () => {
           </div>
           <h3 className="text-sm font-semibold text-foreground">Προηγούμενα ταξίδια</h3>
         </div>
-
-        {/* Contacts Card */}
         <div className="relative bg-card rounded-2xl p-4 shadow-sm border border-border">
           <Badge className="absolute top-3 right-3 bg-blue-500 text-white text-[10px] px-2 py-0.5 hover:bg-blue-500">
             ΝΕΑ
@@ -103,7 +149,10 @@ const Profile = () => {
       </div>
 
       {/* Logout Button */}
-      <button className="w-full flex items-center gap-4 px-4 py-4 text-destructive hover:bg-destructive/10 rounded-xl transition-colors">
+      <button
+        onClick={handleLogout}
+        className="w-full flex items-center gap-4 px-4 py-4 text-destructive hover:bg-destructive/10 rounded-xl transition-colors"
+      >
         <LogOut className="w-5 h-5" />
         <span className="font-medium text-sm">Αποσύνδεση</span>
       </button>
