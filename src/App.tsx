@@ -14,6 +14,7 @@ import HostToday from "./pages/host/HostToday";
 import HostCalendar from "./pages/host/HostCalendar";
 import HostListings from "./pages/host/HostListings";
 import SearchOverlay from "./pages/SearchOverlay";
+import SearchResults from "./pages/SearchResults";
 import HostMessages from "./pages/host/HostMessages";
 import HostMenu from "./pages/host/HostMenu";
 import CreateListing from "./pages/host/CreateListing";
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/profile" element={<Profile />} />
           </Route>
           <Route path="/search" element={<SearchOverlay />} />
+          <Route path="/results" element={<SearchResults />} />
 
           {/* Host Mode Routes */}
           <Route path="/host" element={<HostLayout />}>

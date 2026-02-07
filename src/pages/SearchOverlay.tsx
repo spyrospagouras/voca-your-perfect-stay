@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { X, Search, Clock, Navigation, MapPin, ChevronRight, Calendar, Users, Minus, Plus } from "lucide-react";
 import DateCalendar from "@/components/search/DateCalendar";
+import { usePhotonSearch, type PhotonResult } from "@/hooks/usePhotonSearch";
+import PhotonDropdown from "@/components/search/PhotonDropdown";
 
 const tabs = ["Καταλύματα", "Εμπειρίες", "Υπηρεσίες"];
 const DATE_TABS = ["Ημερομηνίες", "Μήνες", "Έχω ευελιξία"];
@@ -23,6 +25,9 @@ const SearchOverlay = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("Καταλύματα");
   const [query, setQuery] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState<PhotonResult | null>(null);
+  const { results: photonResults, loading: photonLoading, search: photonSearch, clearResults } = usePhotonSearch();
+  const [showPhotonDropdown, setShowPhotonDropdown] = useState(false);
   const [expandedSection, setExpandedSection] = useState<"where" | "when" | "who" | null>("where");
   const [guests, setGuests] = useState<GuestCounts>({ adults: 0, children: 0, infants: 0, pets: 0 });
   const [dateTab, setDateTab] = useState("Ημερομηνίες");
@@ -100,9 +105,28 @@ const SearchOverlay = () => {
                 type="text"
                 placeholder="Αναζήτηση προορισμών"
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  photonSearch(e.target.value);
+                  setShowPhotonDropdown(true);
+                }}
+                onFocus={() => query.length >= 2 && setShowPhotonDropdown(true)}
                 className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
                 maxLength={200}
+              />
+            </div>
+            <div className="relative mb-2">
+              <PhotonDropdown
+                results={photonResults}
+                loading={photonLoading}
+                visible={showPhotonDropdown && query.length >= 2}
+                onSelect={(result) => {
+                  setQuery(result.displayName);
+                  setSelectedLocation(result);
+                  setShowPhotonDropdown(false);
+                  clearResults();
+                  setExpandedSection("when");
+                }}
               />
             </div>
             <div className="mb-4">
@@ -266,8 +290,17 @@ const SearchOverlay = () => {
           Εκκαθάριση όλων
         </button>
         <button
-          onClick={() => navigate("/")}
-          className="flex items-center gap-2 bg-[#FF385C] text-white rounded-full px-6 py-3 font-semibold text-sm hover:bg-[#E31C5F] transition-colors"
+          onClick={() => {
+            const params = new URLSearchParams();
+            if (selectedLocation) {
+              params.set("lat", String(selectedLocation.lat));
+              params.set("lng", String(selectedLocation.lng));
+              params.set("name", selectedLocation.displayName);
+              params.set("zoom", "13");
+            }
+            navigate(`/results?${params.toString()}`);
+          }}
+          className="flex items-center gap-2 bg-primary text-primary-foreground rounded-full px-6 py-3 font-semibold text-sm hover:opacity-90 transition-opacity"
         >
           <Search className="w-4 h-4" />
           Αναζήτηση
