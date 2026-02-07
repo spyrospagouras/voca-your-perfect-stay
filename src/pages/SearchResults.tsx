@@ -1,11 +1,14 @@
 import { useState, useCallback, useMemo, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, SlidersHorizontal, MapIcon, List } from "lucide-react";
+import { ArrowLeft, SlidersHorizontal, MapIcon, Info } from "lucide-react";
 import type { LatLngBounds } from "leaflet";
 import { mockListings, type Listing } from "@/data/mockListings";
 import { usePhotonSearch } from "@/hooks/usePhotonSearch";
 import ListingsMap from "@/components/map/ListingsMap";
 import ListingCard from "@/components/results/ListingCard";
+import BottomSheet from "@/components/results/BottomSheet";
+import PropertyCardSheet from "@/components/results/PropertyCardSheet";
+import BottomNavigation from "@/components/layout/BottomNavigation";
 
 const DEFAULT_CENTER: [number, number] = [37.9755, 23.7348]; // Athens
 const DEFAULT_ZOOM = 12;
@@ -26,7 +29,6 @@ const SearchResults = () => {
   const [activeListing, setActiveListing] = useState<string | null>(null);
   const [bounds, setBounds] = useState<LatLngBounds | null>(null);
   const [showSearchArea, setShowSearchArea] = useState(false);
-  const [showMap, setShowMap] = useState(true); // mobile toggle
   const moveCountRef = useRef(0);
 
   const visibleListings = useMemo(() => {
@@ -44,7 +46,6 @@ const SearchResults = () => {
       if (moveCountRef.current > 1) {
         setShowSearchArea(true);
       }
-      // Reverse geocode
       const name = await reverseGeocode(lat, lng);
       if (name) setLocationName(name);
     },
@@ -53,12 +54,25 @@ const SearchResults = () => {
 
   const handleSearchArea = useCallback(() => {
     setShowSearchArea(false);
-    // bounds already updated via onBoundsChange
   }, []);
 
   const handleMarkerClick = useCallback((listing: Listing) => {
     setActiveListing(listing.id);
   }, []);
+
+  const sheetHeader = (
+    <div>
+      <p className="text-base font-semibold text-foreground">
+        {visibleListings.length} καταλύματα
+      </p>
+      <button className="flex items-center gap-1 mt-0.5">
+        <span className="text-xs text-muted-foreground underline">
+          Πώς ταξινομούμε αποτελέσματα
+        </span>
+        <Info className="w-3 h-3 text-muted-foreground" />
+      </button>
+    </div>
+  );
 
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
@@ -83,14 +97,10 @@ const SearchResults = () => {
         </button>
       </div>
 
-      {/* Desktop: split view, Mobile: toggle */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Listings panel - hidden on mobile when map is shown */}
-        <div
-          className={`${
-            showMap ? "hidden md:flex" : "flex"
-          } flex-col w-full md:w-[400px] lg:w-[440px] border-r border-border overflow-y-auto`}
-        >
+      {/* Main content area */}
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* Desktop: listings sidebar */}
+        <div className="hidden md:flex flex-col w-[400px] lg:w-[440px] border-r border-border overflow-y-auto">
           {visibleListings.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
               <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
@@ -117,8 +127,8 @@ const SearchResults = () => {
           )}
         </div>
 
-        {/* Map - hidden on mobile when list is shown */}
-        <div className={`${showMap ? "flex" : "hidden md:flex"} flex-1`}>
+        {/* Map - full width on mobile, flex-1 on desktop */}
+        <div className="flex-1">
           <ListingsMap
             listings={visibleListings}
             center={center}
@@ -131,26 +141,32 @@ const SearchResults = () => {
             onSearchArea={handleSearchArea}
           />
         </div>
+
+        {/* Mobile: Bottom Sheet over the map */}
+        <BottomSheet headerContent={sheetHeader} collapsedHeight={220} bottomOffset={64}>
+          {visibleListings.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                <MapIcon className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                Δεν βρέθηκαν καταλύματα
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Μετακινήστε τον χάρτη για να βρείτε καταλύματα
+              </p>
+            </div>
+          ) : (
+            visibleListings.map((listing) => (
+              <PropertyCardSheet key={listing.id} listing={listing} />
+            ))
+          )}
+        </BottomSheet>
       </div>
 
-      {/* Mobile toggle button */}
-      <div className="md:hidden absolute bottom-6 left-1/2 -translate-x-1/2 z-[1001]">
-        <button
-          onClick={() => setShowMap(!showMap)}
-          className="flex items-center gap-2 bg-foreground text-background rounded-full px-5 py-3 text-sm font-semibold shadow-lg"
-        >
-          {showMap ? (
-            <>
-              <List className="w-4 h-4" />
-              Λίστα
-            </>
-          ) : (
-            <>
-              <MapIcon className="w-4 h-4" />
-              Χάρτης
-            </>
-          )}
-        </button>
+      {/* Bottom Navigation - always visible */}
+      <div className="md:hidden">
+        <BottomNavigation />
       </div>
     </div>
   );
