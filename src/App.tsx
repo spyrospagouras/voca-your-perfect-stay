@@ -18,6 +18,7 @@ import SearchResults from "./pages/SearchResults";
 import HostMessages from "./pages/host/HostMessages";
 import HostMenu from "./pages/host/HostMenu";
 import CreateListing from "./pages/host/CreateListing";
+import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ const App = () => (
           </Route>
           <Route path="/search" element={<SearchOverlay />} />
           <Route path="/results" element={<SearchResults />} />
+          <Route path="/chat" element={<Chat />} />
 
           {/* Host Mode Routes */}
           <Route path="/host" element={<HostLayout />}>
