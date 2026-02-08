@@ -1,5 +1,5 @@
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, User } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { ArrowLeft, Globe, User } from "lucide-react";
 
 const TopHeader = () => {
   const location = useLocation();
@@ -23,13 +23,24 @@ const TopHeader = () => {
           )}
         </div>
 
-        {/* Right side - Profile avatar */}
-        <button
-          onClick={() => navigate("/profile")}
-          className="w-10 h-10 rounded-full border-2 border-divider flex items-center justify-center hover:border-muted-foreground transition-colors"
-        >
-          <User className="w-5 h-5 text-muted-foreground" />
-        </button>
+        {/* Right side - Host CTA, Globe, Profile */}
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => navigate("/host/onboarding")}
+            className="hidden md:flex items-center px-4 py-2 text-sm font-medium text-foreground rounded-full hover:bg-muted transition-colors"
+          >
+            Γίνετε οικοδεσπότης
+          </button>
+          <button className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-muted transition-colors">
+            <Globe className="w-5 h-5 text-foreground" />
+          </button>
+          <button
+            onClick={() => navigate("/profile")}
+            className="w-10 h-10 rounded-full border-2 border-divider flex items-center justify-center hover:border-muted-foreground transition-colors"
+          >
+            <User className="w-5 h-5 text-muted-foreground" />
+          </button>
+        </div>
       </div>
     </header>
   );
