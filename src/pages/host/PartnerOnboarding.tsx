@@ -14,6 +14,8 @@ import StepPrivacyToggle from "@/components/onboarding/StepPrivacyToggle";
 import StepPinRefine from "@/components/onboarding/StepPinRefine";
 import StepBasics from "@/components/onboarding/StepBasics";
 import StepIntro2 from "@/components/onboarding/StepIntro2";
+import StepAmenities from "@/components/onboarding/StepAmenities";
+import StepPhotos from "@/components/onboarding/StepPhotos";
 
 export interface OnboardingData {
   email: string;
@@ -36,7 +38,9 @@ type Step =
   | "privacy-toggle"
   | "pin-refine"
   | "basics"
-  | "intro2";
+  | "intro2"
+  | "amenities"
+  | "photos";
 
 const FLOW: Step[] = [
   "landing",
@@ -49,6 +53,8 @@ const FLOW: Step[] = [
   "pin-refine",
   "basics",
   "intro2",
+  "amenities",
+  "photos",
 ];
 
 const STORAGE_KEY = "voca_onboarding_draft";
@@ -87,6 +93,8 @@ const PartnerOnboarding = () => {
   const [basics, setBasics] = useState(
     draft?.basics || { guests: 2, bedrooms: 1, beds: 1, bathrooms: 1 }
   );
+  const [amenities, setAmenities] = useState<string[]>(draft?.amenities || []);
+  const [photos, setPhotos] = useState<string[]>(draft?.photos || []);
 
   // Persist draft to localStorage
   useEffect(() => {
@@ -105,11 +113,13 @@ const PartnerOnboarding = () => {
           city,
           showExact,
           basics,
+          amenities,
+          photos,
           listingId: draftListingId.current,
         })
       );
     }
-  }, [step, category, privacyType, address, lat, lng, street, zip, city, showExact, basics]);
+  }, [step, category, privacyType, address, lat, lng, street, zip, city, showExact, basics, amenities, photos]);
 
   // --- Supabase draft sync helpers ---
   const upsertDraft = async (extraFields: Record<string, any> = {}) => {
@@ -133,6 +143,7 @@ const PartnerOnboarding = () => {
       bedrooms: basics.bedrooms,
       beds: basics.beds,
       bathrooms: basics.bathrooms,
+      images: photos.length > 0 ? photos : null,
       ...extraFields,
     };
 
@@ -170,11 +181,12 @@ const PartnerOnboarding = () => {
     setStep("intro");
   };
 
+  const DATA_STEPS: Step[] = ["category", "privacy", "location", "address", "privacy-toggle", "pin-refine", "basics", "amenities", "photos"];
+
   const goNextFrom = async (current: Step) => {
     const idx = FLOW.indexOf(current);
     if (idx < FLOW.length - 1) {
-      // Save to Supabase on steps that hold data
-      if (["category", "privacy", "location", "address", "privacy-toggle", "pin-refine", "basics"].includes(current)) {
+      if (DATA_STEPS.includes(current)) {
         await upsertDraft();
       }
       setStep(FLOW[idx + 1]);
@@ -198,12 +210,12 @@ const PartnerOnboarding = () => {
         .update({ role: "host" })
         .eq("id", currentUser.id);
 
-      // Final update: mark listing as active
       if (draftListingId.current) {
         await supabase
           .from("listings")
           .update({
             status: "active",
+            images: photos,
             location_name: [street, city].filter(Boolean).join(", ") || address,
           })
           .eq("id", draftListingId.current);
@@ -305,7 +317,26 @@ const PartnerOnboarding = () => {
       )}
 
       {step === "intro2" && (
-        <StepIntro2 onNext={handleFinish} onBack={goBack} />
+        <StepIntro2 onNext={() => goNextFrom("intro2")} onBack={goBack} />
+      )}
+
+      {step === "amenities" && (
+        <StepAmenities
+          selected={amenities}
+          onSelect={setAmenities}
+          onNext={() => goNextFrom("amenities")}
+          onBack={goBack}
+        />
+      )}
+
+      {step === "photos" && (
+        <StepPhotos
+          photos={photos}
+          onChange={setPhotos}
+          listingId={draftListingId.current}
+          onNext={handleFinish}
+          onBack={goBack}
+        />
       )}
 
       <AuthModal
