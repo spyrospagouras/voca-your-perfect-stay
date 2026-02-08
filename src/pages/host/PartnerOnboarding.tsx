@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -66,11 +66,13 @@ const PartnerOnboarding = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const draft = loadDraft();
+  const draftListingId = useRef<string | null>(draft?.listingId || null);
 
   const [step, setStep] = useState<Step>(
     draft?.step && user ? draft.step : "landing"
   );
   const [showAuth, setShowAuth] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   // Listing data
   const [category, setCategory] = useState(draft?.category || "");
@@ -78,8 +80,6 @@ const PartnerOnboarding = () => {
   const [address, setAddress] = useState(draft?.address || "");
   const [lat, setLat] = useState(draft?.lat ?? 37.9838);
   const [lng, setLng] = useState(draft?.lng ?? 23.7275);
-
-  // New fields
   const [street, setStreet] = useState(draft?.street || "");
   const [zip, setZip] = useState(draft?.zip || "");
   const [city, setCity] = useState(draft?.city || "");
@@ -88,7 +88,7 @@ const PartnerOnboarding = () => {
     draft?.basics || { guests: 2, bedrooms: 1, beds: 1, bathrooms: 1 }
   );
 
-  // Persist draft
+  // Persist draft to localStorage
   useEffect(() => {
     if (step !== "landing") {
       localStorage.setItem(
@@ -105,17 +105,64 @@ const PartnerOnboarding = () => {
           city,
           showExact,
           basics,
+          listingId: draftListingId.current,
         })
       );
     }
   }, [step, category, privacyType, address, lat, lng, street, zip, city, showExact, basics]);
 
-  const handleStart = () => {
-    if (user) {
-      setStep("intro");
-    } else {
-      setShowAuth(true);
+  // --- Supabase draft sync helpers ---
+  const upsertDraft = async (extraFields: Record<string, any> = {}) => {
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    if (!currentUser) return;
+
+    const payload: Record<string, any> = {
+      host_id: currentUser.id,
+      title: "Νέα καταχώρηση",
+      status: "draft",
+      property_type: category || null,
+      privacy_type: privacyType || null,
+      location_name: address || null,
+      latitude: lat,
+      longitude: lng,
+      street: street || null,
+      zip: zip || null,
+      city: city || null,
+      show_exact_location: showExact,
+      max_guests: basics.guests,
+      bedrooms: basics.bedrooms,
+      beds: basics.beds,
+      bathrooms: basics.bathrooms,
+      ...extraFields,
+    };
+
+    setSaving(true);
+    try {
+      if (draftListingId.current) {
+        await supabase
+          .from("listings")
+          .update(payload as any)
+          .eq("id", draftListingId.current);
+      } else {
+        const { data, error } = await supabase
+          .from("listings")
+          .insert(payload as any)
+          .select("id")
+          .single();
+        if (error) throw error;
+        if (data) draftListingId.current = data.id;
+      }
+    } catch (err: any) {
+      console.error("Draft save error:", err.message);
+    } finally {
+      setSaving(false);
     }
+  };
+
+  // --- Navigation ---
+  const handleStart = () => {
+    if (user) setStep("intro");
+    else setShowAuth(true);
   };
 
   const handleAuthSuccess = () => {
@@ -123,9 +170,15 @@ const PartnerOnboarding = () => {
     setStep("intro");
   };
 
-  const goNext = () => {
-    const idx = FLOW.indexOf(step);
-    if (idx < FLOW.length - 1) setStep(FLOW[idx + 1]);
+  const goNextFrom = async (current: Step) => {
+    const idx = FLOW.indexOf(current);
+    if (idx < FLOW.length - 1) {
+      // Save to Supabase on steps that hold data
+      if (["category", "privacy", "location", "address", "privacy-toggle", "pin-refine", "basics"].includes(current)) {
+        await upsertDraft();
+      }
+      setStep(FLOW[idx + 1]);
+    }
   };
 
   const goBack = () => {
@@ -135,10 +188,9 @@ const PartnerOnboarding = () => {
   };
 
   const handleFinish = async () => {
+    setSaving(true);
     try {
-      const {
-        data: { user: currentUser },
-      } = await supabase.auth.getUser();
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
       if (!currentUser) throw new Error("No user");
 
       await supabase
@@ -146,28 +198,24 @@ const PartnerOnboarding = () => {
         .update({ role: "host" })
         .eq("id", currentUser.id);
 
-      await supabase.from("listings").insert({
-        host_id: currentUser.id,
-        title: `Νέα καταχώρηση`,
-        property_type: category,
-        privacy_type: privacyType,
-        location_name: [street, city].filter(Boolean).join(", ") || address,
-        latitude: lat,
-        longitude: lng,
-      });
+      // Final update: mark listing as active
+      if (draftListingId.current) {
+        await supabase
+          .from("listings")
+          .update({
+            status: "active",
+            location_name: [street, city].filter(Boolean).join(", ") || address,
+          })
+          .eq("id", draftListingId.current);
+      }
 
       localStorage.removeItem(STORAGE_KEY);
-      toast({
-        title: "Επιτυχία!",
-        description: "Η καταχώρησή σας δημιουργήθηκε.",
-      });
+      toast({ title: "Επιτυχία!", description: "Η καταχώρησή σας δημιουργήθηκε." });
       navigate("/host/listings");
     } catch (error: any) {
-      toast({
-        title: "Σφάλμα",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "Σφάλμα", description: error.message, variant: "destructive" });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -175,13 +223,13 @@ const PartnerOnboarding = () => {
     <div className="min-h-screen bg-background">
       {step === "landing" && <HostLanding onStart={handleStart} />}
 
-      {step === "intro" && <StepIntro onNext={goNext} onBack={goBack} />}
+      {step === "intro" && <StepIntro onNext={() => goNextFrom("intro")} onBack={goBack} />}
 
       {step === "category" && (
         <StepCategory
           selected={category}
           onSelect={setCategory}
-          onNext={goNext}
+          onNext={() => goNextFrom("category")}
           onBack={goBack}
         />
       )}
@@ -190,7 +238,7 @@ const PartnerOnboarding = () => {
         <StepPrivacyType
           selected={privacyType}
           onSelect={setPrivacyType}
-          onNext={goNext}
+          onNext={() => goNextFrom("privacy")}
           onBack={goBack}
         />
       )}
@@ -205,7 +253,7 @@ const PartnerOnboarding = () => {
             setLat(d.lat);
             setLng(d.lng);
           }}
-          onNext={goNext}
+          onNext={() => goNextFrom("location")}
           onBack={goBack}
         />
       )}
@@ -218,7 +266,7 @@ const PartnerOnboarding = () => {
             setZip(d.zip);
             setCity(d.city);
           }}
-          onNext={goNext}
+          onNext={() => goNextFrom("address")}
           onBack={goBack}
         />
       )}
@@ -229,7 +277,7 @@ const PartnerOnboarding = () => {
           lng={lng}
           showExact={showExact}
           onToggle={setShowExact}
-          onNext={goNext}
+          onNext={() => goNextFrom("privacy-toggle")}
           onBack={goBack}
         />
       )}
@@ -242,7 +290,7 @@ const PartnerOnboarding = () => {
             setLat(newLat);
             setLng(newLng);
           }}
-          onNext={goNext}
+          onNext={() => goNextFrom("pin-refine")}
           onBack={goBack}
         />
       )}
@@ -251,7 +299,7 @@ const PartnerOnboarding = () => {
         <StepBasics
           basics={basics}
           onChange={setBasics}
-          onNext={goNext}
+          onNext={() => goNextFrom("basics")}
           onBack={goBack}
         />
       )}
