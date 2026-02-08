@@ -1,8 +1,9 @@
-import { useState, useCallback } from "react";
-import { MapContainer, TileLayer, useMapEvents } from "react-leaflet";
-import { MapPin } from "lucide-react";
+import { useState, useCallback, useRef } from "react";
+import { MapContainer, TileLayer, useMapEvents, useMap } from "react-leaflet";
+import { MapPin, LocateFixed, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import OnboardingFooter from "./OnboardingFooter";
+import { toast } from "@/hooks/use-toast";
 import "leaflet/dist/leaflet.css";
 
 interface Props {
@@ -24,8 +25,20 @@ const MapEvents = ({ onMove }: { onMove: (lat: number, lng: number) => void }) =
   return null;
 };
 
+function FlyToTarget({ target }: { target: [number, number] | null }) {
+  const map = useMap();
+  const prev = useRef<[number, number] | null>(null);
+  if (target && (!prev.current || prev.current[0] !== target[0] || prev.current[1] !== target[1])) {
+    prev.current = target;
+    map.flyTo(target, 16, { duration: 1.5 });
+  }
+  return null;
+}
+
 const StepLocation = ({ address, lat, lng, onUpdate, onNext, onBack }: Props) => {
   const [localAddress, setLocalAddress] = useState(address);
+  const [geoLoading, setGeoLoading] = useState(false);
+  const [flyTarget, setFlyTarget] = useState<[number, number] | null>(null);
 
   const handleMove = useCallback(
     async (newLat: number, newLng: number) => {
@@ -50,6 +63,48 @@ const StepLocation = ({ address, lat, lng, onUpdate, onNext, onBack }: Props) =>
     [localAddress, onUpdate]
   );
 
+  const handleCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      toast({ title: "Η πρόσβαση στην τοποθεσία δεν είναι ενεργοποιημένη" });
+      return;
+    }
+    setGeoLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setFlyTarget([latitude, longitude]);
+        // Reverse geocode
+        try {
+          const res = await fetch(
+            `https://photon.komoot.io/reverse?lat=${latitude}&lon=${longitude}&limit=1&lang=el`
+          );
+          const data = await res.json();
+          const feature = data.features?.[0];
+          if (feature) {
+            const p = feature.properties;
+            const name = [p.name, p.street, p.city, p.country].filter(Boolean).join(", ");
+            setLocalAddress(name);
+            onUpdate({ address: name, lat: latitude, lng: longitude });
+          } else {
+            const fallback = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+            setLocalAddress(fallback);
+            onUpdate({ address: fallback, lat: latitude, lng: longitude });
+          }
+        } catch {
+          const fallback = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+          setLocalAddress(fallback);
+          onUpdate({ address: fallback, lat: latitude, lng: longitude });
+        }
+        setGeoLoading(false);
+      },
+      () => {
+        setGeoLoading(false);
+        toast({ title: "Η πρόσβαση στην τοποθεσία δεν είναι ενεργοποιημένη" });
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <div className="flex-1 flex flex-col">
@@ -68,8 +123,25 @@ const StepLocation = ({ address, lat, lng, onUpdate, onNext, onBack }: Props) =>
               onUpdate({ address: e.target.value, lat, lng });
             }}
             placeholder="Εισάγετε τη διεύθυνσή σας"
-            className="h-12 rounded-lg mb-4"
+            className="h-12 rounded-lg mb-3"
           />
+          {/* Current location button */}
+          <button
+            onClick={handleCurrentLocation}
+            disabled={geoLoading}
+            className="w-full flex items-center gap-3 py-3 px-1 mb-4 rounded-lg hover:bg-accent transition-colors disabled:opacity-60"
+          >
+            <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center shrink-0">
+              {geoLoading ? (
+                <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
+              ) : (
+                <LocateFixed className="w-4 h-4 text-muted-foreground" />
+              )}
+            </div>
+            <span className="text-sm font-medium text-foreground">
+              {geoLoading ? "Εντοπισμός..." : "Χρήση τρέχουσας τοποθεσίας"}
+            </span>
+          </button>
         </div>
 
         {/* Map */}
@@ -83,6 +155,7 @@ const StepLocation = ({ address, lat, lng, onUpdate, onNext, onBack }: Props) =>
           >
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
             <MapEvents onMove={handleMove} />
+            <FlyToTarget target={flyTarget} />
           </MapContainer>
 
           {/* Center pin */}
