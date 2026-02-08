@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { X, Search, Clock, Navigation, MapPin, ChevronRight, Calendar, Users, Minus, Plus } from "lucide-react";
+import { X, Search, Clock, Navigation, MapPin, ChevronRight, Calendar, Users, Minus, Plus, Loader2, LocateFixed } from "lucide-react";
 import DateCalendar from "@/components/search/DateCalendar";
 import { usePhotonSearch, type PhotonResult } from "@/hooks/usePhotonSearch";
 import PhotonDropdown from "@/components/search/PhotonDropdown";
+import { toast } from "@/hooks/use-toast";
 
 const tabs = ["Καταλύματα", "Εμπειρίες", "Υπηρεσίες"];
 const DATE_TABS = ["Ημερομηνίες", "Μήνες", "Έχω ευελιξία"];
@@ -26,8 +27,9 @@ const SearchOverlay = () => {
   const [activeTab, setActiveTab] = useState("Καταλύματα");
   const [query, setQuery] = useState("");
   const [selectedLocation, setSelectedLocation] = useState<PhotonResult | null>(null);
-  const { results: photonResults, loading: photonLoading, search: photonSearch, clearResults } = usePhotonSearch();
+  const { results: photonResults, loading: photonLoading, search: photonSearch, reverseGeocode, clearResults } = usePhotonSearch();
   const [showPhotonDropdown, setShowPhotonDropdown] = useState(false);
+  const [geoLoading, setGeoLoading] = useState(false);
   const [expandedSection, setExpandedSection] = useState<"where" | "when" | "who" | null>("where");
   const [guests, setGuests] = useState<GuestCounts>({ adults: 0, children: 0, infants: 0, pets: 0 });
   const [dateTab, setDateTab] = useState("Ημερομηνίες");
@@ -115,6 +117,42 @@ const SearchOverlay = () => {
                 maxLength={200}
               />
             </div>
+            {/* Current location button */}
+            <button
+              onClick={async () => {
+                if (!navigator.geolocation) {
+                  toast({ title: "Η πρόσβαση στην τοποθεσία δεν είναι ενεργοποιημένη" });
+                  return;
+                }
+                setGeoLoading(true);
+                navigator.geolocation.getCurrentPosition(
+                  async (pos) => {
+                    const { latitude, longitude } = pos.coords;
+                    const name = await reverseGeocode(latitude, longitude);
+                    const displayName = name || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+                    setQuery(displayName);
+                    setSelectedLocation({ name: displayName, lat: latitude, lng: longitude, displayName });
+                    setShowPhotonDropdown(false);
+                    clearResults();
+                    setGeoLoading(false);
+                    setExpandedSection("when");
+                  },
+                  () => {
+                    setGeoLoading(false);
+                    toast({ title: "Η πρόσβαση στην τοποθεσία δεν είναι ενεργοποιημένη" });
+                  },
+                  { enableHighAccuracy: true, timeout: 10000 }
+                );
+              }}
+              className="w-full flex items-center gap-3 py-3 mb-1"
+            >
+              <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                {geoLoading ? <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" /> : <LocateFixed className="w-5 h-5 text-muted-foreground" />}
+              </div>
+              <p className="text-sm font-medium text-foreground">Χρήση τρέχουσας τοποθεσίας</p>
+            </button>
+            <div className="border-b border-border mb-3" />
+
             <div className="relative mb-2">
               <PhotonDropdown
                 results={photonResults}
