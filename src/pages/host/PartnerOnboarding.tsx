@@ -23,18 +23,36 @@ export interface OnboardingData {
 
 type Step = "landing" | "intro" | "category" | "privacy" | "location";
 
+const STORAGE_KEY = "voca_onboarding_draft";
+
+const loadDraft = () => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+};
+
 const PartnerOnboarding = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [step, setStep] = useState<Step>("landing");
+  const draft = loadDraft();
+
+  const [step, setStep] = useState<Step>(draft?.step && user ? draft.step : "landing");
   const [showAuth, setShowAuth] = useState(false);
 
-  // Listing data
-  const [category, setCategory] = useState("");
-  const [privacyType, setPrivacyType] = useState("");
-  const [address, setAddress] = useState("");
-  const [lat, setLat] = useState(37.9838);
-  const [lng, setLng] = useState(23.7275);
+  // Listing data (restore from draft)
+  const [category, setCategory] = useState(draft?.category || "");
+  const [privacyType, setPrivacyType] = useState(draft?.privacyType || "");
+  const [address, setAddress] = useState(draft?.address || "");
+  const [lat, setLat] = useState(draft?.lat ?? 37.9838);
+  const [lng, setLng] = useState(draft?.lng ?? 23.7275);
+
+  // Persist draft on every change
+  useEffect(() => {
+    if (step !== "landing") {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ step, category, privacyType, address, lat, lng }));
+    }
+  }, [step, category, privacyType, address, lat, lng]);
 
   const handleStart = () => {
     if (user) {
@@ -65,10 +83,14 @@ const PartnerOnboarding = () => {
         host_id: currentUser.id,
         title: `Νέα καταχώρηση`,
         property_type: category,
+        privacy_type: privacyType,
         location_name: address,
         latitude: lat,
         longitude: lng,
       });
+
+      // Clear draft
+      localStorage.removeItem(STORAGE_KEY);
 
       toast({ title: "Επιτυχία!", description: "Η καταχώρησή σας δημιουργήθηκε." });
       navigate("/host/listings");
