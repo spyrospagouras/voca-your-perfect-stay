@@ -9,6 +9,11 @@ import StepIntro from "@/components/onboarding/StepIntro";
 import StepCategory from "@/components/onboarding/StepCategory";
 import StepPrivacyType from "@/components/onboarding/StepPrivacyType";
 import StepLocation from "@/components/onboarding/StepLocation";
+import StepAddressConfirm from "@/components/onboarding/StepAddressConfirm";
+import StepPrivacyToggle from "@/components/onboarding/StepPrivacyToggle";
+import StepPinRefine from "@/components/onboarding/StepPinRefine";
+import StepBasics from "@/components/onboarding/StepBasics";
+import StepIntro2 from "@/components/onboarding/StepIntro2";
 
 export interface OnboardingData {
   email: string;
@@ -21,7 +26,30 @@ export interface OnboardingData {
   propertySubType: string;
 }
 
-type Step = "landing" | "intro" | "category" | "privacy" | "location";
+type Step =
+  | "landing"
+  | "intro"
+  | "category"
+  | "privacy"
+  | "location"
+  | "address"
+  | "privacy-toggle"
+  | "pin-refine"
+  | "basics"
+  | "intro2";
+
+const FLOW: Step[] = [
+  "landing",
+  "intro",
+  "category",
+  "privacy",
+  "location",
+  "address",
+  "privacy-toggle",
+  "pin-refine",
+  "basics",
+  "intro2",
+];
 
 const STORAGE_KEY = "voca_onboarding_draft";
 
@@ -29,7 +57,9 @@ const loadDraft = () => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : null;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 };
 
 const PartnerOnboarding = () => {
@@ -37,22 +67,48 @@ const PartnerOnboarding = () => {
   const { user } = useAuth();
   const draft = loadDraft();
 
-  const [step, setStep] = useState<Step>(draft?.step && user ? draft.step : "landing");
+  const [step, setStep] = useState<Step>(
+    draft?.step && user ? draft.step : "landing"
+  );
   const [showAuth, setShowAuth] = useState(false);
 
-  // Listing data (restore from draft)
+  // Listing data
   const [category, setCategory] = useState(draft?.category || "");
   const [privacyType, setPrivacyType] = useState(draft?.privacyType || "");
   const [address, setAddress] = useState(draft?.address || "");
   const [lat, setLat] = useState(draft?.lat ?? 37.9838);
   const [lng, setLng] = useState(draft?.lng ?? 23.7275);
 
-  // Persist draft on every change
+  // New fields
+  const [street, setStreet] = useState(draft?.street || "");
+  const [zip, setZip] = useState(draft?.zip || "");
+  const [city, setCity] = useState(draft?.city || "");
+  const [showExact, setShowExact] = useState(draft?.showExact ?? true);
+  const [basics, setBasics] = useState(
+    draft?.basics || { guests: 2, bedrooms: 1, beds: 1, bathrooms: 1 }
+  );
+
+  // Persist draft
   useEffect(() => {
     if (step !== "landing") {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ step, category, privacyType, address, lat, lng }));
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          step,
+          category,
+          privacyType,
+          address,
+          lat,
+          lng,
+          street,
+          zip,
+          city,
+          showExact,
+          basics,
+        })
+      );
     }
-  }, [step, category, privacyType, address, lat, lng]);
+  }, [step, category, privacyType, address, lat, lng, street, zip, city, showExact, basics]);
 
   const handleStart = () => {
     if (user) {
@@ -67,45 +123,51 @@ const PartnerOnboarding = () => {
     setStep("intro");
   };
 
+  const goNext = () => {
+    const idx = FLOW.indexOf(step);
+    if (idx < FLOW.length - 1) setStep(FLOW[idx + 1]);
+  };
+
+  const goBack = () => {
+    const idx = FLOW.indexOf(step);
+    if (idx <= 0) navigate(-1);
+    else setStep(FLOW[idx - 1]);
+  };
+
   const handleFinish = async () => {
     try {
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
       if (!currentUser) throw new Error("No user");
 
-      // Update profile to host
       await supabase
         .from("profiles")
         .update({ role: "host" })
         .eq("id", currentUser.id);
 
-      // Create listing
       await supabase.from("listings").insert({
         host_id: currentUser.id,
         title: `Νέα καταχώρηση`,
         property_type: category,
         privacy_type: privacyType,
-        location_name: address,
+        location_name: [street, city].filter(Boolean).join(", ") || address,
         latitude: lat,
         longitude: lng,
       });
 
-      // Clear draft
       localStorage.removeItem(STORAGE_KEY);
-
-      toast({ title: "Επιτυχία!", description: "Η καταχώρησή σας δημιουργήθηκε." });
+      toast({
+        title: "Επιτυχία!",
+        description: "Η καταχώρησή σας δημιουργήθηκε.",
+      });
       navigate("/host/listings");
     } catch (error: any) {
-      toast({ title: "Σφάλμα", description: error.message, variant: "destructive" });
-    }
-  };
-
-  const handleBack = () => {
-    const flow: Step[] = ["landing", "intro", "category", "privacy", "location"];
-    const idx = flow.indexOf(step);
-    if (idx <= 0) {
-      navigate(-1);
-    } else {
-      setStep(flow[idx - 1]);
+      toast({
+        title: "Σφάλμα",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -113,16 +175,14 @@ const PartnerOnboarding = () => {
     <div className="min-h-screen bg-background">
       {step === "landing" && <HostLanding onStart={handleStart} />}
 
-      {step === "intro" && (
-        <StepIntro onNext={() => setStep("category")} onBack={handleBack} />
-      )}
+      {step === "intro" && <StepIntro onNext={goNext} onBack={goBack} />}
 
       {step === "category" && (
         <StepCategory
           selected={category}
           onSelect={setCategory}
-          onNext={() => setStep("privacy")}
-          onBack={handleBack}
+          onNext={goNext}
+          onBack={goBack}
         />
       )}
 
@@ -130,8 +190,8 @@ const PartnerOnboarding = () => {
         <StepPrivacyType
           selected={privacyType}
           onSelect={setPrivacyType}
-          onNext={() => setStep("location")}
-          onBack={handleBack}
+          onNext={goNext}
+          onBack={goBack}
         />
       )}
 
@@ -145,9 +205,59 @@ const PartnerOnboarding = () => {
             setLat(d.lat);
             setLng(d.lng);
           }}
-          onNext={handleFinish}
-          onBack={handleBack}
+          onNext={goNext}
+          onBack={goBack}
         />
+      )}
+
+      {step === "address" && (
+        <StepAddressConfirm
+          address={address}
+          onUpdate={(d) => {
+            setStreet(d.street);
+            setZip(d.zip);
+            setCity(d.city);
+          }}
+          onNext={goNext}
+          onBack={goBack}
+        />
+      )}
+
+      {step === "privacy-toggle" && (
+        <StepPrivacyToggle
+          lat={lat}
+          lng={lng}
+          showExact={showExact}
+          onToggle={setShowExact}
+          onNext={goNext}
+          onBack={goBack}
+        />
+      )}
+
+      {step === "pin-refine" && (
+        <StepPinRefine
+          lat={lat}
+          lng={lng}
+          onUpdate={(newLat, newLng) => {
+            setLat(newLat);
+            setLng(newLng);
+          }}
+          onNext={goNext}
+          onBack={goBack}
+        />
+      )}
+
+      {step === "basics" && (
+        <StepBasics
+          basics={basics}
+          onChange={setBasics}
+          onNext={goNext}
+          onBack={goBack}
+        />
+      )}
+
+      {step === "intro2" && (
+        <StepIntro2 onNext={handleFinish} onBack={goBack} />
       )}
 
       <AuthModal
