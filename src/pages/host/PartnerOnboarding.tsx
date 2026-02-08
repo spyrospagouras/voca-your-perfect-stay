@@ -16,6 +16,11 @@ import StepBasics from "@/components/onboarding/StepBasics";
 import StepIntro2 from "@/components/onboarding/StepIntro2";
 import StepAmenities from "@/components/onboarding/StepAmenities";
 import StepPhotos from "@/components/onboarding/StepPhotos";
+import StepCoverPhoto from "@/components/onboarding/StepCoverPhoto";
+import StepTitle from "@/components/onboarding/StepTitle";
+import StepHighlights from "@/components/onboarding/StepHighlights";
+import StepDescription from "@/components/onboarding/StepDescription";
+import StepIntro3 from "@/components/onboarding/StepIntro3";
 
 export interface OnboardingData {
   email: string;
@@ -40,7 +45,12 @@ type Step =
   | "basics"
   | "intro2"
   | "amenities"
-  | "photos";
+  | "photos"
+  | "cover-photo"
+  | "title"
+  | "highlights"
+  | "description"
+  | "intro3";
 
 const FLOW: Step[] = [
   "landing",
@@ -55,6 +65,11 @@ const FLOW: Step[] = [
   "intro2",
   "amenities",
   "photos",
+  "cover-photo",
+  "title",
+  "highlights",
+  "description",
+  "intro3",
 ];
 
 const STORAGE_KEY = "voca_onboarding_draft";
@@ -95,6 +110,9 @@ const PartnerOnboarding = () => {
   );
   const [amenities, setAmenities] = useState<string[]>(draft?.amenities || []);
   const [photos, setPhotos] = useState<string[]>(draft?.photos || []);
+  const [listingTitle, setListingTitle] = useState(draft?.listingTitle || "");
+  const [highlights, setHighlights] = useState<string[]>(draft?.highlights || []);
+  const [description, setDescription] = useState(draft?.description || "");
 
   // Persist draft to localStorage
   useEffect(() => {
@@ -115,11 +133,14 @@ const PartnerOnboarding = () => {
           basics,
           amenities,
           photos,
+          listingTitle,
+          highlights,
+          description,
           listingId: draftListingId.current,
         })
       );
     }
-  }, [step, category, privacyType, address, lat, lng, street, zip, city, showExact, basics, amenities, photos]);
+  }, [step, category, privacyType, address, lat, lng, street, zip, city, showExact, basics, amenities, photos, listingTitle, highlights, description]);
 
   // --- Supabase draft sync helpers ---
   const upsertDraft = async (extraFields: Record<string, any> = {}) => {
@@ -128,7 +149,6 @@ const PartnerOnboarding = () => {
 
     const payload: Record<string, any> = {
       host_id: currentUser.id,
-      title: "Νέα καταχώρηση",
       status: "draft",
       property_type: category || null,
       privacy_type: privacyType || null,
@@ -145,6 +165,8 @@ const PartnerOnboarding = () => {
       bathrooms: basics.bathrooms,
       amenities: amenities.length > 0 ? amenities : [],
       images: photos.length > 0 ? photos : null,
+      title: listingTitle.trim() || "Νέα καταχώρηση",
+      description: description.trim() || null,
       ...extraFields,
     };
 
@@ -182,7 +204,7 @@ const PartnerOnboarding = () => {
     setStep("intro");
   };
 
-  const DATA_STEPS: Step[] = ["category", "privacy", "location", "address", "privacy-toggle", "pin-refine", "basics", "amenities", "photos"];
+  const DATA_STEPS: Step[] = ["category", "privacy", "location", "address", "privacy-toggle", "pin-refine", "basics", "amenities", "photos", "cover-photo", "title", "highlights", "description"];
 
   const goNextFrom = async (current: Step) => {
     const idx = FLOW.indexOf(current);
@@ -335,6 +357,49 @@ const PartnerOnboarding = () => {
           photos={photos}
           onChange={setPhotos}
           listingId={draftListingId.current}
+          onNext={() => goNextFrom("photos")}
+          onBack={goBack}
+        />
+      )}
+
+      {step === "cover-photo" && (
+        <StepCoverPhoto
+          photos={photos}
+          onChange={setPhotos}
+          onNext={() => goNextFrom("cover-photo")}
+          onBack={goBack}
+        />
+      )}
+
+      {step === "title" && (
+        <StepTitle
+          title={listingTitle}
+          onChange={setListingTitle}
+          onNext={() => goNextFrom("title")}
+          onBack={goBack}
+        />
+      )}
+
+      {step === "highlights" && (
+        <StepHighlights
+          selected={highlights}
+          onSelect={setHighlights}
+          onNext={() => goNextFrom("highlights")}
+          onBack={goBack}
+        />
+      )}
+
+      {step === "description" && (
+        <StepDescription
+          description={description}
+          onChange={setDescription}
+          onNext={() => goNextFrom("description")}
+          onBack={goBack}
+        />
+      )}
+
+      {step === "intro3" && (
+        <StepIntro3
           onNext={handleFinish}
           onBack={goBack}
         />
