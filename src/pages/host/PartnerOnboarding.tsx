@@ -1,11 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import StepEmail from "@/components/onboarding/StepEmail";
-import StepPersonalDetails from "@/components/onboarding/StepPersonalDetails";
-import StepPassword from "@/components/onboarding/StepPassword";
-import StepPropertyType from "@/components/onboarding/StepPropertyType";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import HostLanding from "@/components/onboarding/HostLanding";
+import AuthModal from "@/components/onboarding/AuthModal";
+import StepIntro from "@/components/onboarding/StepIntro";
+import StepCategory from "@/components/onboarding/StepCategory";
+import StepPrivacyType from "@/components/onboarding/StepPrivacyType";
+import StepLocation from "@/components/onboarding/StepLocation";
 
 export interface OnboardingData {
   email: string;
@@ -18,120 +21,118 @@ export interface OnboardingData {
   propertySubType: string;
 }
 
+type Step = "landing" | "intro" | "category" | "privacy" | "location";
+
 const PartnerOnboarding = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
-  const [data, setData] = useState<OnboardingData>({
-    email: "",
-    firstName: "",
-    lastName: "",
-    phone: "",
-    countryCode: "+30",
-    password: "",
-    propertyType: "",
-    propertySubType: "",
-  });
+  const { user } = useAuth();
+  const [step, setStep] = useState<Step>("landing");
+  const [showAuth, setShowAuth] = useState(false);
 
-  const updateData = (partial: Partial<OnboardingData>) => {
-    setData((prev) => ({ ...prev, ...partial }));
+  // Listing data
+  const [category, setCategory] = useState("");
+  const [privacyType, setPrivacyType] = useState("");
+  const [address, setAddress] = useState("");
+  const [lat, setLat] = useState(37.9838);
+  const [lng, setLng] = useState(23.7275);
+
+  const handleStart = () => {
+    if (user) {
+      setStep("intro");
+    } else {
+      setShowAuth(true);
+    }
+  };
+
+  const handleAuthSuccess = () => {
+    setShowAuth(false);
+    setStep("intro");
+  };
+
+  const handleFinish = async () => {
+    try {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) throw new Error("No user");
+
+      // Update profile to host
+      await supabase
+        .from("profiles")
+        .update({ role: "host" })
+        .eq("id", currentUser.id);
+
+      // Create listing
+      await supabase.from("listings").insert({
+        host_id: currentUser.id,
+        title: `Νέα καταχώρηση`,
+        property_type: category,
+        location_name: address,
+        latitude: lat,
+        longitude: lng,
+      });
+
+      toast({ title: "Επιτυχία!", description: "Η καταχώρησή σας δημιουργήθηκε." });
+      navigate("/host/listings");
+    } catch (error: any) {
+      toast({ title: "Σφάλμα", description: error.message, variant: "destructive" });
+    }
   };
 
   const handleBack = () => {
-    if (step === 1) {
-      navigate("/host/menu");
+    const flow: Step[] = ["landing", "intro", "category", "privacy", "location"];
+    const idx = flow.indexOf(step);
+    if (idx <= 0) {
+      navigate(-1);
     } else {
-      setStep((s) => s - 1);
-    }
-  };
-
-  const handleSignUp = async () => {
-    try {
-      const fullName = `${data.firstName} ${data.lastName}`.trim();
-      const { data: authData, error } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          emailRedirectTo: window.location.origin,
-          data: { full_name: fullName },
-        },
-      });
-
-      if (error) throw error;
-
-      // Update profile with phone
-      if (authData.user) {
-        await supabase
-          .from("profiles")
-          .update({
-            full_name: fullName,
-            role: "host",
-          })
-          .eq("id", authData.user.id);
-      }
-
-      setStep(4);
-    } catch (error: any) {
-      toast({
-        title: "Σφάλμα",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleFinish = async (propertyType: string, subType: string) => {
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) throw new Error("No user");
-
-      await supabase.from("listings").insert({
-        host_id: user.id,
-        title: `Νέα καταχώρηση - ${subType || propertyType}`,
-        property_type: subType || propertyType,
-      });
-
-      toast({ title: "Επιτυχία!", description: "Ο λογαριασμός σας δημιουργήθηκε." });
-      navigate("/host/listings");
-    } catch (error: any) {
-      toast({
-        title: "Σφάλμα",
-        description: error.message,
-        variant: "destructive",
-      });
+      setStep(flow[idx - 1]);
     }
   };
 
   return (
     <div className="min-h-screen bg-background">
-      {step === 1 && (
-        <StepEmail
-          email={data.email}
-          onUpdate={updateData}
-          onNext={() => setStep(2)}
+      {step === "landing" && <HostLanding onStart={handleStart} />}
+
+      {step === "intro" && (
+        <StepIntro onNext={() => setStep("category")} onBack={handleBack} />
+      )}
+
+      {step === "category" && (
+        <StepCategory
+          selected={category}
+          onSelect={setCategory}
+          onNext={() => setStep("privacy")}
           onBack={handleBack}
         />
       )}
-      {step === 2 && (
-        <StepPersonalDetails
-          data={data}
-          onUpdate={updateData}
-          onNext={() => setStep(3)}
+
+      {step === "privacy" && (
+        <StepPrivacyType
+          selected={privacyType}
+          onSelect={setPrivacyType}
+          onNext={() => setStep("location")}
           onBack={handleBack}
         />
       )}
-      {step === 3 && (
-        <StepPassword
-          data={data}
-          onUpdate={updateData}
-          onSignUp={handleSignUp}
+
+      {step === "location" && (
+        <StepLocation
+          address={address}
+          lat={lat}
+          lng={lng}
+          onUpdate={(d) => {
+            setAddress(d.address);
+            setLat(d.lat);
+            setLng(d.lng);
+          }}
+          onNext={handleFinish}
           onBack={handleBack}
         />
       )}
-      {step === 4 && (
-        <StepPropertyType onFinish={handleFinish} onBack={handleBack} />
-      )}
+
+      <AuthModal
+        open={showAuth}
+        onOpenChange={setShowAuth}
+        onAuthSuccess={handleAuthSuccess}
+      />
     </div>
   );
 };
