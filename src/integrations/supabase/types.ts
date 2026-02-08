@@ -96,6 +96,7 @@ export type Database = {
       }
       listings: {
         Row: {
+          amenities: string[] | null
           bathrooms: number
           bedrooms: number
           beds: number
@@ -120,6 +121,7 @@ export type Database = {
           zip: string | null
         }
         Insert: {
+          amenities?: string[] | null
           bathrooms?: number
           bedrooms?: number
           beds?: number
@@ -144,6 +146,7 @@ export type Database = {
           zip?: string | null
         }
         Update: {
+          amenities?: string[] | null
           bathrooms?: number
           bedrooms?: number
           beds?: number
