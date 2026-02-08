@@ -1,10 +1,10 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Search, Heart, Map, MessageSquare, User } from "lucide-react";
+import { Search, Heart, Map, MessageSquare, User, Home } from "lucide-react";
 
 const navItems = [
   { path: "/", label: "Εξερευνήστε", icon: Search },
   { path: "/wishlists", label: "Αγαπημένα", icon: Heart },
-  { path: "/trips", label: "Ταξίδια", icon: Map },
+  { path: "/host/onboarding", label: "Φιλοξενία", icon: Home },
   { path: "/messages", label: "Μηνύματα", icon: MessageSquare },
   { path: "/profile", label: "Προφίλ", icon: User },
 ];
