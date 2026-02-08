@@ -101,8 +101,10 @@ export type Database = {
           bedrooms: number
           beds: number
           city: string | null
+          cover_image_url: string | null
           created_at: string | null
           description: string | null
+          highlights: string[] | null
           host_id: string | null
           id: string
           images: string[] | null
@@ -126,8 +128,10 @@ export type Database = {
           bedrooms?: number
           beds?: number
           city?: string | null
+          cover_image_url?: string | null
           created_at?: string | null
           description?: string | null
+          highlights?: string[] | null
           host_id?: string | null
           id?: string
           images?: string[] | null
@@ -151,8 +155,10 @@ export type Database = {
           bedrooms?: number
           beds?: number
           city?: string | null
+          cover_image_url?: string | null
           created_at?: string | null
           description?: string | null
+          highlights?: string[] | null
           host_id?: string | null
           id?: string
           images?: string[] | null

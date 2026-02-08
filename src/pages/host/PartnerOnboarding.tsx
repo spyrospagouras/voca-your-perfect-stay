@@ -165,8 +165,10 @@ const PartnerOnboarding = () => {
       bathrooms: basics.bathrooms,
       amenities: amenities.length > 0 ? amenities : [],
       images: photos.length > 0 ? photos : null,
+      cover_image_url: photos.length > 0 ? photos[0] : null,
       title: listingTitle.trim() || "Νέα καταχώρηση",
       description: description.trim() || null,
+      highlights: highlights.length > 0 ? highlights : [],
       ...extraFields,
     };
 
@@ -230,22 +232,26 @@ const PartnerOnboarding = () => {
 
       await supabase
         .from("profiles")
-        .update({ role: "host" })
+        .update({ role: "host" } as any)
         .eq("id", currentUser.id);
 
       if (draftListingId.current) {
         await supabase
           .from("listings")
           .update({
-            status: "active",
+            status: "ready_for_pricing",
             images: photos,
+            cover_image_url: photos[0] || null,
+            title: listingTitle.trim() || "Νέα καταχώρηση",
+            description: description.trim() || null,
+            highlights: highlights.length > 0 ? highlights : [],
             location_name: [street, city].filter(Boolean).join(", ") || address,
-          })
+          } as any)
           .eq("id", draftListingId.current);
       }
 
       localStorage.removeItem(STORAGE_KEY);
-      toast({ title: "Επιτυχία!", description: "Η καταχώρησή σας δημιουργήθηκε." });
+      toast({ title: "Επιτυχία!", description: "Η καταχώρησή σας είναι έτοιμη για τιμολόγηση." });
       navigate("/host/listings");
     } catch (error: any) {
       toast({ title: "Σφάλμα", description: error.message, variant: "destructive" });
