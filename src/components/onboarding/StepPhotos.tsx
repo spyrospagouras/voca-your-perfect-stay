@@ -28,7 +28,9 @@ const StepPhotos = ({ photos, onChange, listingId, onNext, onBack }: Props) => {
 
       for (const file of Array.from(files)) {
         if (!file.type.startsWith("image/")) continue;
-        const path = `${user.id}/${listingId || "temp"}/${Date.now()}-${file.name}`;
+        const folder = listingId || "temp";
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const path = `${folder}/${Date.now()}-${safeName}`;
         const { error } = await supabase.storage
           .from("listing-photos")
           .upload(path, file, { upsert: false });

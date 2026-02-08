@@ -143,6 +143,7 @@ const PartnerOnboarding = () => {
       bedrooms: basics.bedrooms,
       beds: basics.beds,
       bathrooms: basics.bathrooms,
+      amenities: amenities.length > 0 ? amenities : [],
       images: photos.length > 0 ? photos : null,
       ...extraFields,
     };
