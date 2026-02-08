@@ -96,6 +96,10 @@ export type Database = {
       }
       listings: {
         Row: {
+          bathrooms: number
+          bedrooms: number
+          beds: number
+          city: string | null
           created_at: string | null
           description: string | null
           host_id: string | null
@@ -104,13 +108,22 @@ export type Database = {
           latitude: number | null
           location_name: string | null
           longitude: number | null
+          max_guests: number
           price_per_night: number | null
           privacy_type: string | null
           property_type: string | null
           rating: number | null
+          show_exact_location: boolean
+          status: string
+          street: string | null
           title: string
+          zip: string | null
         }
         Insert: {
+          bathrooms?: number
+          bedrooms?: number
+          beds?: number
+          city?: string | null
           created_at?: string | null
           description?: string | null
           host_id?: string | null
@@ -119,13 +132,22 @@ export type Database = {
           latitude?: number | null
           location_name?: string | null
           longitude?: number | null
+          max_guests?: number
           price_per_night?: number | null
           privacy_type?: string | null
           property_type?: string | null
           rating?: number | null
+          show_exact_location?: boolean
+          status?: string
+          street?: string | null
           title: string
+          zip?: string | null
         }
         Update: {
+          bathrooms?: number
+          bedrooms?: number
+          beds?: number
+          city?: string | null
           created_at?: string | null
           description?: string | null
           host_id?: string | null
@@ -134,11 +156,16 @@ export type Database = {
           latitude?: number | null
           location_name?: string | null
           longitude?: number | null
+          max_guests?: number
           price_per_night?: number | null
           privacy_type?: string | null
           property_type?: string | null
           rating?: number | null
+          show_exact_location?: boolean
+          status?: string
+          street?: string | null
           title?: string
+          zip?: string | null
         }
         Relationships: [
           {

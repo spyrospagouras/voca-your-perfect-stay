@@ -1,0 +1,11 @@
+
+ALTER TABLE public.listings
+  ADD COLUMN IF NOT EXISTS max_guests integer NOT NULL DEFAULT 2,
+  ADD COLUMN IF NOT EXISTS bedrooms integer NOT NULL DEFAULT 1,
+  ADD COLUMN IF NOT EXISTS beds integer NOT NULL DEFAULT 1,
+  ADD COLUMN IF NOT EXISTS bathrooms integer NOT NULL DEFAULT 1,
+  ADD COLUMN IF NOT EXISTS street text,
+  ADD COLUMN IF NOT EXISTS zip text,
+  ADD COLUMN IF NOT EXISTS city text,
+  ADD COLUMN IF NOT EXISTS show_exact_location boolean NOT NULL DEFAULT true,
+  ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'draft';
