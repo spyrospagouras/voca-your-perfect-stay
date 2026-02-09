@@ -22,13 +22,11 @@ const OPTIONS = [
   "Πρακτικό",
 ];
 
-const MAX_SELECTION = 2;
-
 const StepHighlights = ({ selected, onSelect, onNext, onBack }: Props) => {
   const toggle = (item: string) => {
     if (selected.includes(item)) {
       onSelect(selected.filter((s) => s !== item));
-    } else if (selected.length < MAX_SELECTION) {
+    } else {
       onSelect([...selected, item]);
     }
   };
@@ -41,7 +39,7 @@ const StepHighlights = ({ selected, onSelect, onNext, onBack }: Props) => {
           Μετά, θα περιγράψετε τον χώρο σας
         </h1>
         <p className="text-sm text-muted-foreground mb-8">
-          Επιλέξτε έως {MAX_SELECTION} χαρακτηριστικά που ταιριάζουν στον χώρο σας.
+          Επιλέξτε τα χαρακτηριστικά που περιγράφουν καλύτερα τον χώρο σας.
         </p>
 
         <div className="flex flex-wrap gap-2.5">
@@ -55,12 +53,7 @@ const StepHighlights = ({ selected, onSelect, onNext, onBack }: Props) => {
                   isSelected
                     ? "bg-foreground text-background border-foreground"
                     : "bg-background text-foreground border-border hover:border-foreground/40"
-                } ${
-                  !isSelected && selected.length >= MAX_SELECTION
-                    ? "opacity-40 cursor-not-allowed"
-                    : ""
                 }`}
-                disabled={!isSelected && selected.length >= MAX_SELECTION}
               >
                 {opt}
               </button>
@@ -72,7 +65,7 @@ const StepHighlights = ({ selected, onSelect, onNext, onBack }: Props) => {
       <OnboardingFooter
         onBack={onBack}
         onNext={onNext}
-        nextDisabled={selected.length === 0}
+        nextDisabled={false}
         progress={92}
       />
     </div>
