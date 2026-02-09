@@ -11,7 +11,7 @@ interface Props {
   onBack: () => void;
 }
 
-const MIN_PHOTOS = 5;
+
 
 const StepPhotos = ({ photos, onChange, listingId, onNext, onBack }: Props) => {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -70,8 +70,7 @@ const StepPhotos = ({ photos, onChange, listingId, onNext, onBack }: Props) => {
           Προσθέστε μερικές φωτογραφίες
         </h1>
         <p className="text-sm text-muted-foreground mb-8">
-          Χρειάζεστε τουλάχιστον {MIN_PHOTOS} φωτογραφίες για να ξεκινήσετε. Μπορείτε να
-          προσθέσετε περισσότερες αργότερα.
+          Μπορείτε να προσθέσετε φωτογραφίες τώρα ή να τις προσθέσετε αργότερα από το Dashboard σας.
         </p>
 
         {/* Drop zone */}
@@ -109,9 +108,11 @@ const StepPhotos = ({ photos, onChange, listingId, onNext, onBack }: Props) => {
         </div>
 
         {/* Counter */}
-        <p className="text-xs text-muted-foreground mb-3">
-          {photos.length} / {MIN_PHOTOS} ελάχιστες φωτογραφίες
-        </p>
+        {photos.length > 0 && (
+          <p className="text-xs text-muted-foreground mb-3">
+            {photos.length} φωτογραφίες
+          </p>
+        )}
 
         {/* Grid preview */}
         {photos.length > 0 && (
@@ -148,7 +149,7 @@ const StepPhotos = ({ photos, onChange, listingId, onNext, onBack }: Props) => {
       <OnboardingFooter
         onBack={onBack}
         onNext={onNext}
-        nextDisabled={photos.length < MIN_PHOTOS || uploading}
+        nextDisabled={uploading}
         loading={uploading}
         progress={85}
       />

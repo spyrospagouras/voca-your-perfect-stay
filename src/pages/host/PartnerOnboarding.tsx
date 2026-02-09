@@ -165,7 +165,7 @@ const PartnerOnboarding = () => {
       bathrooms: basics.bathrooms,
       amenities: amenities.length > 0 ? amenities : [],
       images: photos.length > 0 ? photos : null,
-      cover_image_url: photos.length > 0 ? photos[0] : null,
+      cover_image_url: photos.length > 0 ? photos[0] : "/placeholder.svg",
       title: listingTitle.trim() || "Νέα καταχώρηση",
       description: description.trim() || null,
       highlights: highlights.length > 0 ? highlights : [],
@@ -241,7 +241,7 @@ const PartnerOnboarding = () => {
           .update({
             status: "ready_for_pricing",
             images: photos,
-            cover_image_url: photos[0] || null,
+            cover_image_url: photos[0] || "/placeholder.svg",
             title: listingTitle.trim() || "Νέα καταχώρηση",
             description: description.trim() || null,
             highlights: highlights.length > 0 ? highlights : [],
