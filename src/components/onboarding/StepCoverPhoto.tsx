@@ -47,50 +47,58 @@ const StepCoverPhoto = ({ photos, onChange, onNext, onBack }: Props) => {
           Σύρετε για αναδιάταξη ή πατήστε μια φωτογραφία για να γίνει εξώφυλλο.
         </p>
 
-        {/* Cover photo */}
-        {photos.length > 0 && (
-          <div className="relative rounded-xl overflow-hidden mb-4 aspect-[4/3]">
-            <img
-              src={photos[0]}
-              alt="Cover"
-              className="w-full h-full object-cover"
-            />
-            <span className="absolute top-3 left-3 bg-foreground/80 text-background text-xs font-semibold px-3 py-1 rounded-full">
-              Φωτογραφία εξωφύλλου
-            </span>
+        {photos.length === 0 ? (
+          <div className="flex items-center justify-center rounded-xl border border-dashed border-border p-10">
+            <p className="text-sm text-muted-foreground text-center">
+              Δεν έχουν προστεθεί φωτογραφίες. Μπορείτε να συνεχίσετε και να προσθέσετε αργότερα.
+            </p>
           </div>
-        )}
+        ) : (
+          <>
+            {/* Cover photo */}
+            <div className="relative rounded-xl overflow-hidden mb-4 aspect-[4/3]">
+              <img
+                src={photos[0]}
+                alt="Cover"
+                className="w-full h-full object-cover"
+              />
+              <span className="absolute top-3 left-3 bg-foreground/80 text-background text-xs font-semibold px-3 py-1 rounded-full">
+                Φωτογραφία εξωφύλλου
+              </span>
+            </div>
 
-        {/* Thumbnails */}
-        {photos.length > 1 && (
-          <div className="grid grid-cols-3 gap-2">
-            {photos.slice(1).map((url, i) => {
-              const realIdx = i + 1;
-              return (
-                <div
-                  key={url}
-                  draggable
-                  onDragStart={() => handleDragStart(realIdx)}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={() => handleDrop(realIdx)}
-                  onClick={() => setCover(realIdx)}
-                  className="relative aspect-square rounded-lg overflow-hidden cursor-pointer group border border-border hover:border-foreground/40 transition-colors"
-                >
-                  <img src={url} alt="" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/10 transition-colors flex items-center justify-center">
-                    <GripVertical className="w-5 h-5 text-background opacity-0 group-hover:opacity-80 transition-opacity drop-shadow" />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+            {/* Thumbnails */}
+            {photos.length > 1 && (
+              <div className="grid grid-cols-3 gap-2">
+                {photos.slice(1).map((url, i) => {
+                  const realIdx = i + 1;
+                  return (
+                    <div
+                      key={url}
+                      draggable
+                      onDragStart={() => handleDragStart(realIdx)}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={() => handleDrop(realIdx)}
+                      onClick={() => setCover(realIdx)}
+                      className="relative aspect-square rounded-lg overflow-hidden cursor-pointer group border border-border hover:border-foreground/40 transition-colors"
+                    >
+                      <img src={url} alt="" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/10 transition-colors flex items-center justify-center">
+                        <GripVertical className="w-5 h-5 text-background opacity-0 group-hover:opacity-80 transition-opacity drop-shadow" />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
         )}
       </div>
 
       <OnboardingFooter
         onBack={onBack}
         onNext={onNext}
-        nextDisabled={photos.length === 0}
+        nextDisabled={false}
         progress={88}
       />
     </div>
