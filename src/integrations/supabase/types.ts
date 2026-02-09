@@ -326,7 +326,47 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      nearby_listings: {
+        Args: {
+          p_exclude_id?: string
+          p_lat: number
+          p_lng: number
+          p_radius_km?: number
+        }
+        Returns: {
+          amenities: string[] | null
+          bathrooms: number
+          bedrooms: number
+          beds: number
+          city: string | null
+          cover_image_url: string | null
+          created_at: string | null
+          description: string | null
+          highlights: string[] | null
+          host_id: string | null
+          id: string
+          images: string[] | null
+          latitude: number | null
+          location_name: string | null
+          longitude: number | null
+          max_guests: number
+          price_per_night: number | null
+          privacy_type: string | null
+          property_type: string | null
+          rating: number | null
+          show_exact_location: boolean
+          status: string
+          street: string | null
+          title: string
+          zip: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "listings"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
     }
     Enums: {
       [_ in never]: never
