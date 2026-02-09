@@ -21,6 +21,8 @@ import StepTitle from "@/components/onboarding/StepTitle";
 import StepHighlights from "@/components/onboarding/StepHighlights";
 import StepDescription from "@/components/onboarding/StepDescription";
 import StepIntro3 from "@/components/onboarding/StepIntro3";
+import StepPricing from "@/components/onboarding/StepPricing";
+import StepReview from "@/components/onboarding/StepReview";
 
 export interface OnboardingData {
   email: string;
@@ -50,7 +52,9 @@ type Step =
   | "title"
   | "highlights"
   | "description"
-  | "intro3";
+  | "intro3"
+  | "pricing"
+  | "review";
 
 const FLOW: Step[] = [
   "landing",
@@ -70,6 +74,8 @@ const FLOW: Step[] = [
   "highlights",
   "description",
   "intro3",
+  "pricing",
+  "review",
 ];
 
 const STORAGE_KEY = "voca_onboarding_draft";
@@ -113,6 +119,7 @@ const PartnerOnboarding = () => {
   const [listingTitle, setListingTitle] = useState(draft?.listingTitle || "");
   const [highlights, setHighlights] = useState<string[]>(draft?.highlights || []);
   const [description, setDescription] = useState(draft?.description || "");
+  const [pricePerNight, setPricePerNight] = useState(draft?.pricePerNight || 50);
 
   // Persist draft to localStorage
   useEffect(() => {
@@ -136,11 +143,12 @@ const PartnerOnboarding = () => {
           listingTitle,
           highlights,
           description,
+          pricePerNight,
           listingId: draftListingId.current,
         })
       );
     }
-  }, [step, category, privacyType, address, lat, lng, street, zip, city, showExact, basics, amenities, photos, listingTitle, highlights, description]);
+  }, [step, category, privacyType, address, lat, lng, street, zip, city, showExact, basics, amenities, photos, listingTitle, highlights, description, pricePerNight]);
 
   // --- Supabase draft sync helpers ---
   const upsertDraft = async (extraFields: Record<string, any> = {}) => {
@@ -169,6 +177,7 @@ const PartnerOnboarding = () => {
       title: listingTitle.trim() || "Νέα καταχώρηση",
       description: description.trim() || null,
       highlights: highlights.length > 0 ? highlights : [],
+      price_per_night: pricePerNight > 0 ? pricePerNight : null,
       ...extraFields,
     };
 
@@ -206,7 +215,7 @@ const PartnerOnboarding = () => {
     setStep("intro");
   };
 
-  const DATA_STEPS: Step[] = ["category", "privacy", "location", "address", "privacy-toggle", "pin-refine", "basics", "amenities", "photos", "cover-photo", "title", "highlights", "description"];
+  const DATA_STEPS: Step[] = ["category", "privacy", "location", "address", "privacy-toggle", "pin-refine", "basics", "amenities", "photos", "cover-photo", "title", "highlights", "description", "pricing"];
 
   const goNextFrom = async (current: Step) => {
     const idx = FLOW.indexOf(current);
@@ -239,19 +248,20 @@ const PartnerOnboarding = () => {
         await supabase
           .from("listings")
           .update({
-            status: "ready_for_pricing",
+            status: "active",
             images: photos,
             cover_image_url: photos[0] || "/placeholder.svg",
             title: listingTitle.trim() || "Νέα καταχώρηση",
             description: description.trim() || null,
             highlights: highlights.length > 0 ? highlights : [],
+            price_per_night: pricePerNight > 0 ? pricePerNight : null,
             location_name: [street, city].filter(Boolean).join(", ") || address,
           } as any)
           .eq("id", draftListingId.current);
       }
 
       localStorage.removeItem(STORAGE_KEY);
-      toast({ title: "Επιτυχία!", description: "Η καταχώρησή σας είναι έτοιμη για τιμολόγηση." });
+      toast({ title: "Επιτυχία!", description: "Η καταχώρησή σας δημοσιεύτηκε!" });
       navigate("/host/listings");
     } catch (error: any) {
       toast({ title: "Σφάλμα", description: error.message, variant: "destructive" });
@@ -406,8 +416,34 @@ const PartnerOnboarding = () => {
 
       {step === "intro3" && (
         <StepIntro3
-          onNext={handleFinish}
+          onNext={() => goNextFrom("intro3")}
           onBack={goBack}
+        />
+      )}
+
+      {step === "pricing" && (
+        <StepPricing
+          price={pricePerNight}
+          onChange={setPricePerNight}
+          onNext={() => goNextFrom("pricing")}
+          onBack={goBack}
+        />
+      )}
+
+      {step === "review" && (
+        <StepReview
+          title={listingTitle}
+          description={description}
+          category={category}
+          privacyType={privacyType}
+          location={[street, city].filter(Boolean).join(", ") || address}
+          basics={basics}
+          price={pricePerNight}
+          coverImage={photos[0] || "/placeholder.svg"}
+          highlights={highlights}
+          onPublish={handleFinish}
+          onBack={goBack}
+          loading={saving}
         />
       )}
 
