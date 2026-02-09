@@ -1,17 +1,23 @@
-import { Minus, Plus } from "lucide-react";
+import { useState } from "react";
+import { Minus, Plus, MapPin } from "lucide-react";
 import OnboardingFooter from "./OnboardingFooter";
+import NearbyListingsModal from "./NearbyListingsModal";
 
 interface Props {
   price: number;
   onChange: (price: number) => void;
   onNext: () => void;
   onBack: () => void;
+  lat?: number;
+  lng?: number;
+  listingId?: string | null;
 }
 
 const MIN_PRICE = 5;
 const STEP = 5;
 
-const StepPricing = ({ price, onChange, onNext, onBack }: Props) => {
+const StepPricing = ({ price, onChange, onNext, onBack, lat, lng, listingId }: Props) => {
+  const [showMap, setShowMap] = useState(false);
   const decrement = () => onChange(Math.max(MIN_PRICE, price - STEP));
   const increment = () => onChange(price + STEP);
 
@@ -61,6 +67,18 @@ const StepPricing = ({ price, onChange, onNext, onBack }: Props) => {
         </div>
 
         <p className="text-center text-sm text-muted-foreground mt-4">ανά βράδυ</p>
+
+        {lat != null && lng != null && (
+          <div className="flex justify-center mt-8">
+            <button
+              onClick={() => setShowMap(true)}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-border bg-background text-foreground text-sm font-medium hover:bg-muted transition-colors"
+            >
+              <MapPin className="w-4 h-4" />
+              Δείτε παρόμοιες καταχωρίσεις
+            </button>
+          </div>
+        )}
       </div>
 
       <OnboardingFooter
@@ -69,6 +87,15 @@ const StepPricing = ({ price, onChange, onNext, onBack }: Props) => {
         nextDisabled={price < MIN_PRICE}
         progress={98}
       />
+
+      {showMap && lat != null && lng != null && (
+        <NearbyListingsModal
+          lat={lat}
+          lng={lng}
+          listingId={listingId ?? null}
+          onClose={() => setShowMap(false)}
+        />
+      )}
     </div>
   );
 };
