@@ -427,6 +427,9 @@ const PartnerOnboarding = () => {
           onChange={setPricePerNight}
           onNext={() => goNextFrom("pricing")}
           onBack={goBack}
+          lat={lat}
+          lng={lng}
+          listingId={draftListingId.current}
         />
       )}
 
