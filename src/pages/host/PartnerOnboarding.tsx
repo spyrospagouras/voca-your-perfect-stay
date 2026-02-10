@@ -16,7 +16,7 @@ import StepBasics from "@/components/onboarding/StepBasics";
 import StepIntro2 from "@/components/onboarding/StepIntro2";
 import StepAmenities from "@/components/onboarding/StepAmenities";
 import StepPhotos from "@/components/onboarding/StepPhotos";
-import StepCoverPhoto from "@/components/onboarding/StepCoverPhoto";
+
 import StepTitle from "@/components/onboarding/StepTitle";
 import StepHighlights from "@/components/onboarding/StepHighlights";
 import StepDescription from "@/components/onboarding/StepDescription";
@@ -48,7 +48,6 @@ type Step =
   | "intro2"
   | "amenities"
   | "photos"
-  | "cover-photo"
   | "title"
   | "highlights"
   | "description"
@@ -69,7 +68,6 @@ const FLOW: Step[] = [
   "intro2",
   "amenities",
   "photos",
-  "cover-photo",
   "title",
   "highlights",
   "description",
@@ -215,7 +213,7 @@ const PartnerOnboarding = () => {
     setStep("intro");
   };
 
-  const DATA_STEPS: Step[] = ["category", "privacy", "location", "address", "privacy-toggle", "pin-refine", "basics", "amenities", "photos", "cover-photo", "title", "highlights", "description", "pricing"];
+  const DATA_STEPS: Step[] = ["category", "privacy", "location", "address", "privacy-toggle", "pin-refine", "basics", "amenities", "photos", "title", "highlights", "description", "pricing"];
 
   const goNextFrom = async (current: Step) => {
     const idx = FLOW.indexOf(current);
@@ -374,15 +372,6 @@ const PartnerOnboarding = () => {
           onChange={setPhotos}
           listingId={draftListingId.current}
           onNext={() => goNextFrom("photos")}
-          onBack={goBack}
-        />
-      )}
-
-      {step === "cover-photo" && (
-        <StepCoverPhoto
-          photos={photos}
-          onChange={setPhotos}
-          onNext={() => goNextFrom("cover-photo")}
           onBack={goBack}
         />
       )}
