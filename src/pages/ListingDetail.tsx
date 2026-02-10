@@ -2,11 +2,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import ListingGallery from "@/components/listing/ListingGallery";
+import ListingAmenities from "@/components/listing/ListingAmenities";
+import ListingLocationMap from "@/components/listing/ListingLocationMap";
 import ListingHostSection from "@/components/listing/ListingHostSection";
-import ListingSpecs from "@/components/listing/ListingSpecs";
-import ListingContact from "@/components/listing/ListingContact";
-import BookingBar from "@/components/listing/BookingBar";
-import { ArrowLeft, Heart, Share2 } from "lucide-react";
+import { ArrowLeft, Heart, Share2, Users, BedDouble, Bath, DoorOpen } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 
@@ -62,8 +61,15 @@ const ListingDetail = () => {
   const hostAvatar = host?.avatar_url || null;
   const images = listing.images?.length ? listing.images : ["/placeholder.svg"];
 
+  const specs = [
+    { icon: Users, label: "Επισκέπτες", value: listing.max_guests },
+    { icon: DoorOpen, label: "Υπνοδωμάτια", value: listing.bedrooms },
+    { icon: BedDouble, label: "Κρεβάτια", value: listing.beds },
+    { icon: Bath, label: "Μπάνια", value: listing.bathrooms },
+  ];
+
   return (
-    <div className="min-h-screen bg-background pb-28">
+    <div className="min-h-screen bg-background pb-24">
       {/* Floating top nav */}
       <div className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-4 pt-3 pb-2 safe-top">
         <button
@@ -87,49 +93,88 @@ const ListingDetail = () => {
 
       {/* Content */}
       <div className="px-5 pt-5 space-y-5">
-        {/* Title & rating */}
+        {/* Title & breadcrumb */}
         <div>
           <h1 className="text-xl font-bold text-foreground leading-tight">
             {listing.title}
           </h1>
-          {listing.location_name && (
-            <p className="text-sm text-muted-foreground mt-1">
-              {listing.location_name}
-            </p>
-          )}
+          <p className="text-sm text-muted-foreground mt-1">
+            {[listing.property_type, listing.city, "Ελλάδα"]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
         </div>
 
-        {/* Specs */}
-        <ListingSpecs rating={listing.rating} />
+        {/* Contact button */}
+        <button className="w-full py-3 rounded-xl bg-[hsl(25,95%,53%)] text-primary-foreground font-semibold text-sm shadow-md active:scale-[0.97] transition-transform">
+          Επικοινώνησε
+        </button>
+
+        {/* Description */}
+        {listing.description && (
+          <p className="text-sm text-foreground leading-relaxed">
+            {listing.description}
+          </p>
+        )}
 
         <Separator className="bg-divider" />
 
-        {/* Host */}
-        <ListingHostSection
-          hostName={hostName}
-          avatarUrl={hostAvatar}
+        {/* Χώρος Section */}
+        <section>
+          <h2 className="text-base font-bold text-foreground mb-4">Χώρος</h2>
+          <div className="grid grid-cols-2 gap-3">
+            {specs.map((s) => (
+              <div
+                key={s.label}
+                className="flex items-center gap-3 p-3 rounded-xl border border-border"
+              >
+                <s.icon className="w-5 h-5 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-semibold text-foreground">{s.value}</p>
+                  <p className="text-xs text-muted-foreground">{s.label}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <Separator className="bg-divider" />
+
+        {/* Παροχές Section */}
+        <ListingAmenities amenities={listing.amenities ?? []} />
+
+        <Separator className="bg-divider" />
+
+        {/* Τοποθεσία Section */}
+        <ListingLocationMap
+          lat={listing.latitude}
+          lng={listing.longitude}
+          locationName={listing.location_name}
         />
 
         <Separator className="bg-divider" />
 
-        {/* Description */}
-        {listing.description && (
-          <>
-            <div>
-              <p className="text-sm text-foreground leading-relaxed">
-                {listing.description}
-              </p>
-            </div>
-            <Separator className="bg-divider" />
-          </>
-        )}
-
-        {/* Contact & Location */}
-        <ListingContact />
+        {/* Host Section */}
+        <section>
+          <h2 className="text-base font-bold text-foreground mb-4">Ο οικοδεσπότης σας</h2>
+          <ListingHostSection hostName={hostName} avatarUrl={hostAvatar} />
+        </section>
       </div>
 
-      {/* Sticky booking bar */}
-      <BookingBar price={listing.price_per_night ?? 0} listingId={listing.id} />
+      {/* Sticky footer */}
+      <div className="fixed bottom-0 left-0 right-0 z-30 bg-background border-t border-border px-5 py-3 safe-bottom">
+        <div className="flex items-center justify-between max-w-lg mx-auto">
+          <div>
+            <span className="text-base font-bold text-foreground">
+              €{listing.price_per_night ?? 0}
+            </span>
+            <span className="text-sm text-muted-foreground"> / νύχτα</span>
+          </div>
+          <button className="px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm shadow-md active:scale-[0.97] transition-transform">
+            Έλεγχος διαθεσιμότητας
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
