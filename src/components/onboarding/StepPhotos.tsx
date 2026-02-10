@@ -222,7 +222,7 @@ const StepPhotos = ({ photos, onChange, listingId, onNext, onBack }: Props) => {
       <OnboardingFooter
         onBack={onBack}
         onNext={onNext}
-        nextDisabled={uploading || photos.length < MIN_PHOTOS}
+        nextDisabled={uploading}
         loading={uploading}
         progress={85}
       />
