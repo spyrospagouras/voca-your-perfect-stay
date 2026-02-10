@@ -1,17 +1,23 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import ListingGallery from "@/components/listing/ListingGallery";
 import ListingAmenities from "@/components/listing/ListingAmenities";
 import ListingLocationMap from "@/components/listing/ListingLocationMap";
 import ListingHostSection from "@/components/listing/ListingHostSection";
+import AvailabilityModal from "@/components/listing/AvailabilityModal";
 import { ArrowLeft, Heart, Share2, Users, BedDouble, Bath, DoorOpen } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "@/hooks/use-toast";
 
 const ListingDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [availabilityOpen, setAvailabilityOpen] = useState(false);
 
   const { data: listing, isLoading } = useQuery({
     queryKey: ["listing", id],
@@ -20,12 +26,22 @@ const ListingDetail = () => {
         .from("listings")
         .select("*, profiles:host_id(full_name, avatar_url)")
         .eq("id", id!)
-        .single();
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
     enabled: !!id,
   });
+
+  const handleContact = () => {
+    if (!user) {
+      toast({ title: "Συνδεθείτε για να στείλετε μήνυμα", variant: "destructive" });
+      navigate("/login");
+      return;
+    }
+    if (!listing) return;
+    navigate(`/chat?host=${listing.host_id}&listing=${listing.id}`);
+  };
 
   if (isLoading) {
     return (
@@ -106,7 +122,10 @@ const ListingDetail = () => {
         </div>
 
         {/* Contact button */}
-        <button className="w-full py-3 rounded-xl bg-[hsl(25,95%,53%)] text-primary-foreground font-semibold text-sm shadow-md active:scale-[0.97] transition-transform">
+        <button
+          onClick={handleContact}
+          className="w-full py-3 rounded-xl bg-[hsl(25,95%,53%)] text-primary-foreground font-semibold text-sm shadow-md active:scale-[0.97] transition-transform"
+        >
           Επικοινώνησε
         </button>
 
@@ -170,11 +189,22 @@ const ListingDetail = () => {
             </span>
             <span className="text-sm text-muted-foreground"> / νύχτα</span>
           </div>
-          <button className="px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm shadow-md active:scale-[0.97] transition-transform">
+          <button
+            onClick={() => setAvailabilityOpen(true)}
+            className="px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm shadow-md active:scale-[0.97] transition-transform"
+          >
             Έλεγχος διαθεσιμότητας
           </button>
         </div>
       </div>
+
+      {/* Availability Modal */}
+      <AvailabilityModal
+        open={availabilityOpen}
+        onOpenChange={setAvailabilityOpen}
+        listingId={listing.id}
+        pricePerNight={listing.price_per_night ?? 0}
+      />
     </div>
   );
 };
