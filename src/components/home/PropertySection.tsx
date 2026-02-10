@@ -2,13 +2,15 @@ import { ChevronRight } from "lucide-react";
 import ExploreCard from "./ExploreCard";
 
 interface Property {
-  id: number;
+  id: string | number;
   image: string;
   title: string;
-  dates: string;
+  location?: string;
+  dates?: string;
   hostType: string;
   price: number;
-  rating: number;
+  rating: number | null;
+  listingId?: string;
 }
 
 interface PropertySectionProps {
@@ -20,7 +22,6 @@ interface PropertySectionProps {
 const PropertySection = ({ title, subtitle, properties }: PropertySectionProps) => {
   return (
     <section className="py-4">
-      {/* Section Header */}
       <div className="px-4 mb-3">
         <button className="flex items-center justify-between w-full group">
           <div className="text-left">
@@ -33,7 +34,6 @@ const PropertySection = ({ title, subtitle, properties }: PropertySectionProps) 
         </button>
       </div>
 
-      {/* Horizontal Scroll */}
       <div className="overflow-x-auto scrollbar-hide">
         <div className="flex gap-4 px-4 pb-2">
           {properties.map((property) => (
@@ -41,10 +41,11 @@ const PropertySection = ({ title, subtitle, properties }: PropertySectionProps) 
               key={property.id}
               image={property.image}
               title={property.title}
-              dates={property.dates}
+              dates={property.dates || property.location || ""}
               hostType={property.hostType}
               price={property.price}
               rating={property.rating}
+              listingId={property.listingId}
             />
           ))}
         </div>

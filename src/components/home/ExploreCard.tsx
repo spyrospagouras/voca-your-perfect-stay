@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Heart, Star } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import AddToWishlistDialog from "@/components/wishlists/AddToWishlistDialog";
 
 interface ExploreCardProps {
@@ -8,7 +9,7 @@ interface ExploreCardProps {
   dates: string;
   hostType: string;
   price: number;
-  rating: number;
+  rating: number | null;
   listingId?: string;
 }
 
@@ -23,6 +24,7 @@ const ExploreCard = ({
 }: ExploreCardProps) => {
   const [isLiked, setIsLiked] = useState(false);
   const [showWishlistDialog, setShowWishlistDialog] = useState(false);
+  const navigate = useNavigate();
 
   const handleHeartClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -33,9 +35,18 @@ const ExploreCard = ({
     }
   };
 
+  const handleCardClick = () => {
+    if (listingId) {
+      navigate(`/listing/${listingId}`);
+    }
+  };
+
   return (
     <>
-      <div className="min-w-[280px] max-w-[280px] flex-shrink-0 cursor-pointer group">
+      <div
+        onClick={handleCardClick}
+        className="min-w-[280px] max-w-[280px] flex-shrink-0 cursor-pointer group"
+      >
         {/* Image Container */}
         <div className="relative aspect-[4/3] rounded-2xl overflow-hidden mb-2">
           <img
@@ -66,17 +77,23 @@ const ExploreCard = ({
               {title}
             </h3>
             <div className="flex items-center gap-0.5 flex-shrink-0">
-              <Star className="w-3.5 h-3.5 fill-foreground text-foreground" />
-              <span className="text-xs font-medium">
-                {rating.toFixed(1).replace(".", ",")}
-              </span>
+              {rating !== null && rating > 0 ? (
+                <>
+                  <Star className="w-3.5 h-3.5 fill-foreground text-foreground" />
+                  <span className="text-xs font-medium">
+                    {rating.toFixed(1).replace(".", ",")}
+                  </span>
+                </>
+              ) : (
+                <span className="text-xs font-medium text-muted-foreground">Νέο</span>
+              )}
             </div>
           </div>
           <p className="text-xs text-muted-foreground">{dates}</p>
           <p className="text-xs text-muted-foreground">{hostType}</p>
           <p className="text-sm text-foreground pt-0.5">
             <span className="font-semibold">€ {price}</span>
-            <span className="text-muted-foreground"> συνολικά</span>
+            <span className="text-muted-foreground"> ανά διανυκτέρευση</span>
           </p>
         </div>
       </div>
