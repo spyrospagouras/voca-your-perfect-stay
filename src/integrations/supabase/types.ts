@@ -100,7 +100,18 @@ export type Database = {
           bathrooms: number
           bedrooms: number
           beds: number
+          business_name: string | null
           city: string | null
+          contact_address: string | null
+          contact_city: string | null
+          contact_email: string | null
+          contact_facebook: string | null
+          contact_instagram: string | null
+          contact_landline: string | null
+          contact_mobile: string | null
+          contact_person: string | null
+          contact_website: string | null
+          contact_zip: string | null
           cover_image_url: string | null
           created_at: string | null
           description: string | null
@@ -127,7 +138,18 @@ export type Database = {
           bathrooms?: number
           bedrooms?: number
           beds?: number
+          business_name?: string | null
           city?: string | null
+          contact_address?: string | null
+          contact_city?: string | null
+          contact_email?: string | null
+          contact_facebook?: string | null
+          contact_instagram?: string | null
+          contact_landline?: string | null
+          contact_mobile?: string | null
+          contact_person?: string | null
+          contact_website?: string | null
+          contact_zip?: string | null
           cover_image_url?: string | null
           created_at?: string | null
           description?: string | null
@@ -154,7 +176,18 @@ export type Database = {
           bathrooms?: number
           bedrooms?: number
           beds?: number
+          business_name?: string | null
           city?: string | null
+          contact_address?: string | null
+          contact_city?: string | null
+          contact_email?: string | null
+          contact_facebook?: string | null
+          contact_instagram?: string | null
+          contact_landline?: string | null
+          contact_mobile?: string | null
+          contact_person?: string | null
+          contact_website?: string | null
+          contact_zip?: string | null
           cover_image_url?: string | null
           created_at?: string | null
           description?: string | null
@@ -338,7 +371,18 @@ export type Database = {
           bathrooms: number
           bedrooms: number
           beds: number
+          business_name: string | null
           city: string | null
+          contact_address: string | null
+          contact_city: string | null
+          contact_email: string | null
+          contact_facebook: string | null
+          contact_instagram: string | null
+          contact_landline: string | null
+          contact_mobile: string | null
+          contact_person: string | null
+          contact_website: string | null
+          contact_zip: string | null
           cover_image_url: string | null
           created_at: string | null
           description: string | null
