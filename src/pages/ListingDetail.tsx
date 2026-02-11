@@ -122,6 +122,21 @@ const ListingDetail = () => {
           </p>
         </div>
 
+        {/* Contact details right below title */}
+        <ListingContact
+          businessName={listing.business_name}
+          contactPerson={listing.contact_person}
+          contactAddress={listing.contact_address}
+          contactZip={listing.contact_zip}
+          contactCity={listing.contact_city}
+          contactLandline={listing.contact_landline}
+          contactMobile={listing.contact_mobile}
+          contactEmail={listing.contact_email}
+          contactWebsite={listing.contact_website}
+          contactFacebook={listing.contact_facebook}
+          contactInstagram={listing.contact_instagram}
+        />
+
         {/* Description */}
         {listing.description && (
           <p className="text-sm text-foreground leading-relaxed">
@@ -165,21 +180,6 @@ const ListingDetail = () => {
         />
 
         <Separator className="bg-divider" />
-
-        {/* Contact Section */}
-        <ListingContact
-          businessName={listing.business_name}
-          contactPerson={listing.contact_person}
-          contactAddress={listing.contact_address}
-          contactZip={listing.contact_zip}
-          contactCity={listing.contact_city}
-          contactLandline={listing.contact_landline}
-          contactMobile={listing.contact_mobile}
-          contactEmail={listing.contact_email}
-          contactWebsite={listing.contact_website}
-          contactFacebook={listing.contact_facebook}
-          contactInstagram={listing.contact_instagram}
-        />
 
         <Separator className="bg-divider" />
 
