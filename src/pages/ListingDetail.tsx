@@ -7,6 +7,7 @@ import ListingGallery from "@/components/listing/ListingGallery";
 import ListingAmenities from "@/components/listing/ListingAmenities";
 import ListingLocationMap from "@/components/listing/ListingLocationMap";
 import ListingHostSection from "@/components/listing/ListingHostSection";
+import ListingContact from "@/components/listing/ListingContact";
 import AvailabilityModal from "@/components/listing/AvailabilityModal";
 import { ArrowLeft, Heart, Share2, Users, BedDouble, Bath, DoorOpen } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -26,7 +27,7 @@ const ListingDetail = () => {
         .from("listings")
         .select("*, profiles:host_id(full_name, avatar_url)")
         .eq("id", id!)
-        .maybeSingle();
+        .maybeSingle() as any;
       if (error) throw error;
       return data;
     },
@@ -121,14 +122,6 @@ const ListingDetail = () => {
           </p>
         </div>
 
-        {/* Contact button */}
-        <button
-          onClick={handleContact}
-          className="w-full py-3 rounded-xl bg-[hsl(25,95%,53%)] text-primary-foreground font-semibold text-sm shadow-md active:scale-[0.97] transition-transform"
-        >
-          Επικοινώνησε
-        </button>
-
         {/* Description */}
         {listing.description && (
           <p className="text-sm text-foreground leading-relaxed">
@@ -169,6 +162,23 @@ const ListingDetail = () => {
           lat={listing.latitude}
           lng={listing.longitude}
           locationName={listing.location_name}
+        />
+
+        <Separator className="bg-divider" />
+
+        {/* Contact Section */}
+        <ListingContact
+          businessName={listing.business_name}
+          contactPerson={listing.contact_person}
+          contactAddress={listing.contact_address}
+          contactZip={listing.contact_zip}
+          contactCity={listing.contact_city}
+          contactLandline={listing.contact_landline}
+          contactMobile={listing.contact_mobile}
+          contactEmail={listing.contact_email}
+          contactWebsite={listing.contact_website}
+          contactFacebook={listing.contact_facebook}
+          contactInstagram={listing.contact_instagram}
         />
 
         <Separator className="bg-divider" />
