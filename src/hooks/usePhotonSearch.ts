@@ -34,7 +34,7 @@ export function usePhotonSearch() {
 
       try {
         const res = await fetch(
-          `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5&lang=el`,
+          `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5&lang=default`,
           { signal: controller.signal }
         );
         const data = await res.json();
@@ -65,7 +65,7 @@ export function usePhotonSearch() {
   const reverseGeocode = useCallback(async (lat: number, lng: number): Promise<string> => {
     try {
       const res = await fetch(
-        `https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}&limit=1&lang=el`
+        `https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}&limit=1&lang=default`
       );
       const data = await res.json();
       if (data.features?.length) {
