@@ -336,6 +336,10 @@ const SearchOverlay = () => {
               params.set("name", selectedLocation.displayName);
               params.set("zoom", "13");
             }
+            const totalG = guests.adults + guests.children;
+            if (totalG > 0) params.set("guests", String(totalG));
+            if (startDate) params.set("checkIn", startDate.toISOString().split("T")[0]);
+            if (endDate) params.set("checkOut", endDate.toISOString().split("T")[0]);
             navigate(`/results?${params.toString()}`);
           }}
           className="flex items-center gap-2 bg-primary text-primary-foreground rounded-full px-6 py-3 font-semibold text-sm hover:opacity-90 transition-opacity"

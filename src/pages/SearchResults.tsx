@@ -1,16 +1,17 @@
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, SlidersHorizontal, MapIcon, Info } from "lucide-react";
 import type { LatLngBounds } from "leaflet";
-import { mockListings, type Listing } from "@/data/mockListings";
+import type { Listing } from "@/data/mockListings";
 import { usePhotonSearch } from "@/hooks/usePhotonSearch";
+import { useSupabaseListings } from "@/hooks/useSupabaseListings";
 import ListingsMap from "@/components/map/ListingsMap";
 import ListingCard from "@/components/results/ListingCard";
 import BottomSheet from "@/components/results/BottomSheet";
 import PropertyCardSheet from "@/components/results/PropertyCardSheet";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 
-const DEFAULT_CENTER: [number, number] = [37.9755, 23.7348]; // Athens
+const DEFAULT_CENTER: [number, number] = [37.9755, 23.7348];
 const DEFAULT_ZOOM = 12;
 
 const SearchResults = () => {
@@ -22,6 +23,9 @@ const SearchResults = () => {
   const initialLng = parseFloat(searchParams.get("lng") || String(DEFAULT_CENTER[1]));
   const initialZoom = parseInt(searchParams.get("zoom") || String(DEFAULT_ZOOM), 10);
   const initialName = searchParams.get("name") || "";
+  const guestsParam = parseInt(searchParams.get("guests") || "0", 10);
+  const checkIn = searchParams.get("checkIn") || undefined;
+  const checkOut = searchParams.get("checkOut") || undefined;
 
   const [center, setCenter] = useState<[number, number]>([initialLat, initialLng]);
   const [zoom] = useState(initialZoom);
@@ -31,10 +35,17 @@ const SearchResults = () => {
   const [showSearchArea, setShowSearchArea] = useState(false);
   const moveCountRef = useRef(0);
 
+  const { listings: allListings, loading, fetchListings } = useSupabaseListings();
+
+  // Fetch on mount
+  useEffect(() => {
+    fetchListings({ guests: guestsParam, checkIn, checkOut });
+  }, [fetchListings, guestsParam, checkIn, checkOut]);
+
   const visibleListings = useMemo(() => {
-    if (!bounds) return [];
-    return mockListings.filter((l) => bounds.contains([l.lat, l.lng]));
-  }, [bounds]);
+    if (!bounds) return allListings;
+    return allListings.filter((l) => bounds.contains([l.lat, l.lng]));
+  }, [bounds, allListings]);
 
   const handleBoundsChange = useCallback((newBounds: LatLngBounds) => {
     setBounds(newBounds);
@@ -63,7 +74,7 @@ const SearchResults = () => {
   const sheetHeader = (
     <div>
       <p className="text-base font-semibold text-foreground">
-        {visibleListings.length} καταλύματα
+        {loading ? "Φόρτωση..." : `${visibleListings.length} καταλύματα`}
       </p>
       <button className="flex items-center gap-1 mt-0.5">
         <span className="text-xs text-muted-foreground underline">
@@ -89,7 +100,7 @@ const SearchResults = () => {
             {locationName || "Αποτελέσματα"}
           </p>
           <p className="text-xs text-muted-foreground">
-            {visibleListings.length} καταλύματα
+            {loading ? "Φόρτωση..." : `${visibleListings.length} καταλύματα`}
           </p>
         </div>
         <button className="w-9 h-9 flex items-center justify-center rounded-full border border-border hover:bg-accent transition-colors">
@@ -107,7 +118,7 @@ const SearchResults = () => {
                 <MapIcon className="w-8 h-8 text-muted-foreground" />
               </div>
               <h3 className="text-lg font-semibold text-foreground mb-2">
-                Δεν βρέθηκαν καταλύματα
+                Δεν βρέθηκαν καταλύματα στην περιοχή
               </h3>
               <p className="text-sm text-muted-foreground">
                 Δοκιμάστε να μετακινήσετε τον χάρτη ή να αναζητήσετε μια διαφορετική περιοχή
@@ -127,7 +138,7 @@ const SearchResults = () => {
           )}
         </div>
 
-        {/* Map - full width on mobile, flex-1 on desktop */}
+        {/* Map */}
         <div className="flex-1">
           <ListingsMap
             listings={visibleListings}
@@ -142,7 +153,7 @@ const SearchResults = () => {
           />
         </div>
 
-        {/* Mobile: Bottom Sheet over the map */}
+        {/* Mobile: Bottom Sheet */}
         <BottomSheet headerContent={sheetHeader} collapsedHeight={220} bottomOffset={64}>
           {visibleListings.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -150,7 +161,7 @@ const SearchResults = () => {
                 <MapIcon className="w-8 h-8 text-muted-foreground" />
               </div>
               <h3 className="text-lg font-semibold text-foreground mb-2">
-                Δεν βρέθηκαν καταλύματα
+                Δεν βρέθηκαν καταλύματα στην περιοχή
               </h3>
               <p className="text-sm text-muted-foreground">
                 Μετακινήστε τον χάρτη για να βρείτε καταλύματα
@@ -164,7 +175,7 @@ const SearchResults = () => {
         </BottomSheet>
       </div>
 
-      {/* Bottom Navigation - always visible */}
+      {/* Bottom Navigation */}
       <div className="md:hidden">
         <BottomNavigation />
       </div>
