@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { X, Search, Clock, Navigation, MapPin, ChevronRight, Calendar, Users, Minus, Plus, Loader2, LocateFixed } from "lucide-react";
 import DateCalendar from "@/components/search/DateCalendar";
 import { usePhotonSearch, type PhotonResult } from "@/hooks/usePhotonSearch";
 import PhotonDropdown from "@/components/search/PhotonDropdown";
 import { toast } from "@/hooks/use-toast";
+import { useRecentSearches, formatRecentSubtext } from "@/hooks/useRecentSearches";
 
 const tabs = ["Καταλύματα", "Εμπειρίες", "Υπηρεσίες"];
 const DATE_TABS = ["Ημερομηνίες", "Μήνες", "Έχω ευελιξία"];
@@ -31,6 +32,7 @@ const SearchOverlay = () => {
   const [showPhotonDropdown, setShowPhotonDropdown] = useState(false);
   const [geoLoading, setGeoLoading] = useState(false);
   const [expandedSection, setExpandedSection] = useState<"where" | "when" | "who" | null>("where");
+  const { searches: recentSearches, addSearch } = useRecentSearches();
   const [guests, setGuests] = useState<GuestCounts>({ adults: 0, children: 0, infants: 0, pets: 0 });
   const [dateTab, setDateTab] = useState("Ημερομηνίες");
   const [flexibility, setFlexibility] = useState("Ακριβείς ημερομηνίες");
@@ -167,17 +169,50 @@ const SearchOverlay = () => {
                 }}
               />
             </div>
-            <div className="mb-4">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Πρόσφατες αναζητήσεις</p>
-              <button className="w-full flex items-center gap-3 py-2">
-                <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center"><Clock className="w-5 h-5 text-muted-foreground" /></div>
-                <div className="flex-1 text-left">
-                  <p className="text-sm font-medium text-foreground">Κυκλάδες</p>
-                  <p className="text-xs text-muted-foreground">1-4 Ιουν • 4 επισκέπτες</p>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
-              </button>
-            </div>
+            {recentSearches.length > 0 && (
+              <div className="mb-4">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Πρόσφατες αναζητήσεις</p>
+                {recentSearches.map((rs, i) => {
+                  const subtext = formatRecentSubtext(rs);
+                  return (
+                    <button
+                      key={i}
+                      className="w-full flex items-center gap-3 py-2"
+                      onClick={() => {
+                        setQuery(rs.locationName);
+                        if (rs.lat && rs.lng) {
+                          setSelectedLocation({ name: rs.locationName, lat: rs.lat, lng: rs.lng, displayName: rs.locationName });
+                        }
+                        if (rs.checkIn) setStartDate(new Date(rs.checkIn));
+                        if (rs.checkOut) setEndDate(new Date(rs.checkOut));
+                        if (rs.guests && rs.guests > 0) {
+                          setGuests(prev => ({ ...prev, adults: rs.guests! }));
+                        }
+                        // Navigate directly
+                        const params = new URLSearchParams();
+                        if (rs.lat && rs.lng) {
+                          params.set("lat", String(rs.lat));
+                          params.set("lng", String(rs.lng));
+                          params.set("name", rs.locationName);
+                          params.set("zoom", "13");
+                        }
+                        if (rs.guests) params.set("guests", String(rs.guests));
+                        if (rs.checkIn) params.set("checkIn", rs.checkIn);
+                        if (rs.checkOut) params.set("checkOut", rs.checkOut);
+                        navigate(`/results?${params.toString()}`);
+                      }}
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center"><Clock className="w-5 h-5 text-muted-foreground" /></div>
+                      <div className="flex-1 text-left">
+                        <p className="text-sm font-medium text-foreground">{rs.locationName}</p>
+                        {subtext && <p className="text-xs text-muted-foreground">{subtext}</p>}
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
             <div>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Προτεινόμενοι προορισμοί</p>
               <div className="space-y-1">
@@ -338,8 +373,24 @@ const SearchOverlay = () => {
             }
             const totalG = guests.adults + guests.children;
             if (totalG > 0) params.set("guests", String(totalG));
-            if (startDate) params.set("checkIn", startDate.toISOString().split("T")[0]);
-            if (endDate) params.set("checkOut", endDate.toISOString().split("T")[0]);
+            const checkInStr = startDate ? startDate.toISOString().split("T")[0] : undefined;
+            const checkOutStr = endDate ? endDate.toISOString().split("T")[0] : undefined;
+            if (checkInStr) params.set("checkIn", checkInStr);
+            if (checkOutStr) params.set("checkOut", checkOutStr);
+
+            // Save to recent searches
+            const locationName = selectedLocation?.displayName || query;
+            if (locationName) {
+              addSearch({
+                locationName,
+                lat: selectedLocation?.lat,
+                lng: selectedLocation?.lng,
+                checkIn: checkInStr,
+                checkOut: checkOutStr,
+                guests: totalG > 0 ? totalG : undefined,
+              });
+            }
+
             navigate(`/results?${params.toString()}`);
           }}
           className="flex items-center gap-2 bg-primary text-primary-foreground rounded-full px-6 py-3 font-semibold text-sm hover:opacity-90 transition-opacity"
