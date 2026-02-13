@@ -114,9 +114,9 @@ const StepReview = ({
       <OnboardingFooter
         onBack={onBack}
         onNext={onPublish}
-        nextLabel="Δημοσίευση"
+        nextLabel="Συνέχεια"
         loading={loading}
-        progress={100}
+        progress={94}
       />
     </div>
   );
