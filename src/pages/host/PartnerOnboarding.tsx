@@ -23,6 +23,7 @@ import StepDescription from "@/components/onboarding/StepDescription";
 import StepIntro3 from "@/components/onboarding/StepIntro3";
 import StepPricing from "@/components/onboarding/StepPricing";
 import StepReview from "@/components/onboarding/StepReview";
+import StepIntro4 from "@/components/onboarding/StepIntro4";
 
 export interface OnboardingData {
   email: string;
@@ -53,7 +54,8 @@ type Step =
   | "description"
   | "intro3"
   | "pricing"
-  | "review";
+  | "review"
+  | "intro4";
 
 const FLOW: Step[] = [
   "landing",
@@ -74,6 +76,7 @@ const FLOW: Step[] = [
   "intro3",
   "pricing",
   "review",
+  "intro4",
 ];
 
 const STORAGE_KEY = "voca_onboarding_draft";
@@ -433,9 +436,16 @@ const PartnerOnboarding = () => {
           price={pricePerNight}
           coverImage={photos[0] || "/placeholder.svg"}
           highlights={highlights}
-          onPublish={handleFinish}
+          onPublish={() => goNextFrom("review")}
           onBack={goBack}
           loading={saving}
+        />
+      )}
+
+      {step === "intro4" && (
+        <StepIntro4
+          onNext={handleFinish}
+          onBack={goBack}
         />
       )}
 
