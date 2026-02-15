@@ -52,13 +52,13 @@ const cards = [
 const StepBookingType = ({ selected, onSelect, onNext, onBack }: Props) => {
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <div className="flex-1 px-6 pt-10 pb-6 max-w-lg mx-auto w-full">
+      <div className="flex-1 px-6 pt-10 pb-6 max-w-4xl mx-auto w-full">
         <p className="text-xs font-semibold text-muted-foreground mb-1">Βήμα 4</p>
         <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-8 leading-tight">
           Τώρα είναι ώρα να επιλέξετε μια κατηγορία.
         </h1>
 
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {cards.map((card) => {
             const Icon = card.icon;
             const isSelected = selected === card.id;
