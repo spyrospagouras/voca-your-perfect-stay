@@ -17,11 +17,6 @@ const items = [
     title: "Επιλέξτε διαθεσιμότητα",
     description: "Ελέγξτε πότε είναι διαθέσιμος ο χώρος σας.",
   },
-  {
-    icon: Shield,
-    title: "Δημοσιεύστε",
-    description: "Θα ελέγξουμε τα στοιχεία σας και θα ξεκινήσετε.",
-  },
 ];
 
 const StepIntro3 = ({ onNext, onBack }: Props) => {
