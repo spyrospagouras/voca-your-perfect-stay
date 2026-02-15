@@ -25,7 +25,7 @@ const StepIntro3 = ({ onNext, onBack }: Props) => {
       <div className="flex-1 flex flex-col justify-center px-6 max-w-lg mx-auto w-full">
         <p className="text-xs font-semibold text-muted-foreground mb-1">Βήμα 3</p>
         <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
-          Ολοκλήρωση και δημοσίευση
+          Ορίστε τιμή και διαθεσιμότητα
         </h1>
         <p className="text-muted-foreground mb-10 text-base">
           Τέλος, θα ορίσετε μια τιμή και θα δημοσιεύσετε την καταχώρησή σας.
