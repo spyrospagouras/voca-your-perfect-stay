@@ -24,6 +24,7 @@ import StepIntro3 from "@/components/onboarding/StepIntro3";
 import StepPricing from "@/components/onboarding/StepPricing";
 import StepReview from "@/components/onboarding/StepReview";
 import StepIntro4 from "@/components/onboarding/StepIntro4";
+import StepBookingType from "@/components/onboarding/StepBookingType";
 
 export interface OnboardingData {
   email: string;
@@ -55,7 +56,8 @@ type Step =
   | "intro3"
   | "pricing"
   | "review"
-  | "intro4";
+  | "intro4"
+  | "booking-type";
 
 const FLOW: Step[] = [
   "landing",
@@ -77,6 +79,7 @@ const FLOW: Step[] = [
   "pricing",
   "review",
   "intro4",
+  "booking-type",
 ];
 
 const STORAGE_KEY = "voca_onboarding_draft";
@@ -121,6 +124,7 @@ const PartnerOnboarding = () => {
   const [highlights, setHighlights] = useState<string[]>(draft?.highlights || []);
   const [description, setDescription] = useState(draft?.description || "");
   const [pricePerNight, setPricePerNight] = useState(draft?.pricePerNight || 50);
+  const [bookingType, setBookingType] = useState(draft?.bookingType || "");
 
   // Persist draft to localStorage
   useEffect(() => {
@@ -145,11 +149,12 @@ const PartnerOnboarding = () => {
           highlights,
           description,
           pricePerNight,
+          bookingType,
           listingId: draftListingId.current,
         })
       );
     }
-  }, [step, category, privacyType, address, lat, lng, street, zip, city, showExact, basics, amenities, photos, listingTitle, highlights, description, pricePerNight]);
+  }, [step, category, privacyType, address, lat, lng, street, zip, city, showExact, basics, amenities, photos, listingTitle, highlights, description, pricePerNight, bookingType]);
 
   // --- Supabase draft sync helpers ---
   const upsertDraft = async (extraFields: Record<string, any> = {}) => {
@@ -179,6 +184,7 @@ const PartnerOnboarding = () => {
       description: description.trim() || null,
       highlights: highlights.length > 0 ? highlights : [],
       price_per_night: pricePerNight > 0 ? pricePerNight : null,
+      booking_type: bookingType || null,
       ...extraFields,
     };
 
@@ -216,7 +222,7 @@ const PartnerOnboarding = () => {
     setStep("intro");
   };
 
-  const DATA_STEPS: Step[] = ["category", "privacy", "location", "address", "privacy-toggle", "pin-refine", "basics", "amenities", "photos", "title", "highlights", "description", "pricing"];
+  const DATA_STEPS: Step[] = ["category", "privacy", "location", "address", "privacy-toggle", "pin-refine", "basics", "amenities", "photos", "title", "highlights", "description", "pricing", "booking-type"];
 
   const goNextFrom = async (current: Step) => {
     const idx = FLOW.indexOf(current);
@@ -444,6 +450,15 @@ const PartnerOnboarding = () => {
 
       {step === "intro4" && (
         <StepIntro4
+          onNext={() => goNextFrom("intro4")}
+          onBack={goBack}
+        />
+      )}
+
+      {step === "booking-type" && (
+        <StepBookingType
+          selected={bookingType}
+          onSelect={setBookingType}
           onNext={handleFinish}
           onBack={goBack}
         />
