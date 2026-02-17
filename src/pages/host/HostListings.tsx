@@ -1,19 +1,24 @@
+import { useState } from "react";
 import { Search, LayoutGrid, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import ListingManagementSheet from "@/components/host/ListingManagementSheet";
 
-const statusMap: Record<string, { label: string; color: string }> = {
-  active: { label: "Καταχωρημένη", color: "bg-green-500" },
-  draft: { label: "Πρόχειρο", color: "bg-yellow-500" },
-  inactive: { label: "Ανενεργή", color: "bg-muted-foreground" },
+const statusMap: Record<string, { label: string; dotColor: string }> = {
+  active: { label: "Καταχωρημένη", dotColor: "bg-green-500" },
+  draft: { label: "Σε εξέλιξη", dotColor: "bg-yellow-500" },
+  in_progress: { label: "Σε εξέλιξη", dotColor: "bg-yellow-500" },
+  inactive: { label: "Ανενεργή", dotColor: "bg-muted-foreground" },
 };
 
 const HostListings = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [selectedListing, setSelectedListing] = useState<any | null>(null);
 
   const { data: listings = [], isLoading } = useQuery({
     queryKey: ["host-listings", user?.id],
@@ -29,6 +34,10 @@ const HostListings = () => {
     },
     enabled: !!user,
   });
+
+  const handleDeleted = () => {
+    queryClient.invalidateQueries({ queryKey: ["host-listings", user?.id] });
+  };
 
   return (
     <div className="px-4 py-6">
@@ -74,7 +83,8 @@ const HostListings = () => {
             return (
               <div
                 key={listing.id}
-                className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                onClick={() => setSelectedListing(listing)}
+                className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer"
               >
                 <div className="relative aspect-[16/10]">
                   <img
@@ -84,7 +94,7 @@ const HostListings = () => {
                   />
                   <div className="absolute top-3 left-3">
                     <Badge className="bg-background/95 text-foreground hover:bg-background/95 px-3 py-1 rounded-full">
-                      <span className={`w-2 h-2 rounded-full ${status.color} mr-2`} />
+                      <span className={`w-2 h-2 rounded-full ${status.dotColor} mr-2 inline-block`} />
                       {status.label}
                     </Badge>
                   </div>
@@ -111,6 +121,13 @@ const HostListings = () => {
           </p>
         </div>
       )}
+
+      <ListingManagementSheet
+        open={!!selectedListing}
+        onOpenChange={(open) => { if (!open) setSelectedListing(null); }}
+        listing={selectedListing}
+        onDeleted={handleDeleted}
+      />
     </div>
   );
 };
