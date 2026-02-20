@@ -1,5 +1,5 @@
 import { useRef, useState, useCallback } from "react";
-import { Camera, ImagePlus } from "lucide-react";
+import { Camera, ImagePlus, X, MessageCircleQuestion } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -120,8 +120,22 @@ const StepPhotos = ({ photos, onChange, listingId, onNext, onBack }: Props) => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <div className="flex-1 overflow-y-auto px-6 pt-10 pb-6 max-w-lg mx-auto w-full">
-        <p className="text-xs font-semibold text-muted-foreground mb-1">Βήμα 7</p>
+      {/* Header with X and help bubble */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+        <button
+          onClick={onBack}
+          className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
+          aria-label="Κλείσιμο"
+        >
+          <X className="w-5 h-5 text-foreground" />
+        </button>
+        <button className="flex items-center gap-1.5 bg-muted rounded-full px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-accent transition-colors">
+          <MessageCircleQuestion className="w-4 h-4" />
+          Ερωτήσεις;
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-6 pt-6 pb-6 max-w-lg mx-auto w-full">
 
         {!hasPhotos ? (
           <>
@@ -222,7 +236,7 @@ const StepPhotos = ({ photos, onChange, listingId, onNext, onBack }: Props) => {
       <OnboardingFooter
         onBack={onBack}
         onNext={onNext}
-        nextDisabled={uploading}
+        nextDisabled={uploading || photos.length < MIN_PHOTOS}
         loading={uploading}
         progress={85}
       />
