@@ -48,50 +48,9 @@ const ListingManagementSheet = ({
 
   if (!listing) return null;
 
-  const handleEdit = async () => {
-    // Fetch full listing data to pre-fill onboarding
-    const { data, error } = await supabase
-      .from("listings")
-      .select("*")
-      .eq("id", listing.id)
-      .single();
-
-    if (error || !data) {
-      toast({ title: "Σφάλμα", description: "Δεν ήταν δυνατή η φόρτωση.", variant: "destructive" });
-      return;
-    }
-
-    // Build draft for localStorage so onboarding picks it up
-    const draft = {
-      step: "photos",
-      listingId: data.id,
-      category: data.property_type || "",
-      privacyType: data.privacy_type || "",
-      address: data.location_name || "",
-      lat: data.latitude ?? 37.9838,
-      lng: data.longitude ?? 23.7275,
-      street: data.street || "",
-      zip: data.zip || "",
-      city: data.city || "",
-      showExact: data.show_exact_location ?? true,
-      basics: {
-        guests: data.max_guests || 2,
-        bedrooms: data.bedrooms || 1,
-        beds: data.beds || 1,
-        bathrooms: data.bathrooms || 1,
-      },
-      amenities: data.amenities || [],
-      photos: data.images || [],
-      listingTitle: data.title || "",
-      highlights: data.highlights || [],
-      description: data.description || "",
-      pricePerNight: Number(data.price_per_night) || 50,
-      bookingType: data.booking_type || "",
-    };
-
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+  const handleEdit = () => {
     onOpenChange(false);
-    navigate("/host/onboarding");
+    navigate(`/host/edit/${listing.id}`);
   };
 
   const handleDelete = async () => {
