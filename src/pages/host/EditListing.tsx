@@ -250,7 +250,7 @@ const EditListing = () => {
       <OnboardingFooter
         onBack={handleClose}
         onNext={handleNext}
-        nextDisabled={uploading || photos.length < MIN_PHOTOS}
+        nextDisabled={uploading}
         loading={uploading}
         progress={85}
       />
