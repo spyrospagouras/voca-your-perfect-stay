@@ -63,7 +63,7 @@ const ListingManagementSheet = ({
 
     // Build draft for localStorage so onboarding picks it up
     const draft = {
-      step: "category",
+      step: "photos",
       listingId: data.id,
       category: data.property_type || "",
       privacyType: data.privacy_type || "",
