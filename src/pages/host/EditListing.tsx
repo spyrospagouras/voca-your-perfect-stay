@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Camera, ImagePlus, X, MessageCircleQuestion } from "lucide-react";
+import { ArrowLeft, Camera, Image as ImageIcon, ImagePlus, MessageCircleQuestion, Plus } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -27,14 +27,12 @@ const EditListing = () => {
 
   const [photos, setPhotos] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
-  const [dragOver, setDragOver] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
-  // Fetch listing photos on mount
   useEffect(() => {
     if (!id) return;
     (async () => {
@@ -109,15 +107,6 @@ const EditListing = () => {
     [photos, autoSave]
   );
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      setDragOver(false);
-      if (e.dataTransfer.files.length) uploadFiles(e.dataTransfer.files);
-    },
-    [uploadFiles]
-  );
-
   const removePhoto = useCallback(
     (url: string) => {
       const updated = photos.filter((p) => p !== url);
@@ -127,10 +116,11 @@ const EditListing = () => {
     [photos, autoSave]
   );
 
-  const handleClose = () => navigate("/host/listings");
+  const handleBack = () => {
+    autoSave(photos);
+    navigate("/host/listings");
+  };
   const handleNext = () => navigate("/host/listings");
-
-  const hasPhotos = photos.length > 0;
 
   if (loading) {
     return (
@@ -140,16 +130,32 @@ const EditListing = () => {
     );
   }
 
+  // Build exactly 5 visual slots
+  const slots: Array<{ type: "photo"; url: string; index: number } | { type: "empty" } | { type: "add" }> = [];
+  for (let i = 0; i < Math.min(photos.length, 4); i++) {
+    slots.push({ type: "photo", url: photos[i], index: i });
+  }
+  // Fill remaining with empties up to 4 secondary slots (slot index 1-4)
+  const filledSecondary = Math.max(0, Math.min(photos.length - 1, 3)); // secondary photos shown
+  const emptyCount = Math.max(0, 3 - filledSecondary); // empty placeholders needed
+  for (let i = 0; i < emptyCount; i++) {
+    slots.push({ type: "empty" });
+  }
+  slots.push({ type: "add" });
+
+  const coverPhoto = photos.length > 0 ? photos[0] : null;
+  const secondarySlots = slots.slice(coverPhoto ? 1 : 0);
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <button
-          onClick={handleClose}
+          onClick={handleBack}
           className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
-          aria-label="Κλείσιμο"
+          aria-label="Πίσω"
         >
-          <X className="w-5 h-5 text-foreground" />
+          <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <button className="flex items-center gap-1.5 bg-muted rounded-full px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-accent transition-colors">
           <MessageCircleQuestion className="w-4 h-4" />
@@ -158,81 +164,100 @@ const EditListing = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 pt-6 pb-6 max-w-lg mx-auto w-full">
-        {!hasPhotos ? (
-          <>
-            <h1 className="text-2xl font-bold text-foreground mb-1">
-              Προσθέστε μερικές φωτογραφίες
-            </h1>
-            <p className="text-sm text-muted-foreground mb-8">
-              Μπορείτε να προσθέσετε φωτογραφίες τώρα ή να τις προσθέσετε αργότερα
-              από το Dashboard σας.
-            </p>
+        {/* Title row */}
+        <div className="flex items-start justify-between mb-1">
+          <h1 className="text-2xl font-bold text-foreground">
+            Επιλέξτε τουλάχιστον 5 φωτογραφίες
+          </h1>
+          <button
+            onClick={() => inputRef.current?.click()}
+            className="flex-shrink-0 ml-3 mt-1"
+            aria-label="Προσθήκη φωτογραφιών"
+          >
+            <Plus className="w-6 h-6 text-foreground" />
+          </button>
+        </div>
+        <p className="text-sm text-muted-foreground mb-6">
+          Σύρετε για να αλλάξετε τη σειρά
+        </p>
 
-            <div
-              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={handleDrop}
-              onClick={() => inputRef.current?.click()}
-              className={`flex flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed p-16 cursor-pointer transition-colors ${
-                dragOver
-                  ? "border-foreground bg-accent/30"
-                  : "border-border hover:border-foreground/40"
-              }`}
-            >
-              <Camera className="w-12 h-12 text-muted-foreground" />
-              <span className="text-sm text-foreground font-semibold">
-                {uploading ? "Μεταφόρτωση…" : "Προσθέστε φωτογραφίες"}
-              </span>
-            </div>
-          </>
-        ) : (
-          <>
-            <h1 className="text-2xl font-bold text-foreground mb-1">
-              Επιλέξτε τουλάχιστον 5 φωτογραφίες
-            </h1>
-            <p className="text-sm text-muted-foreground mb-6">
-              Σύρετε για να αλλάξετε τη σειρά
-            </p>
-
-            <p className="text-xs text-muted-foreground mb-3">
-              {photos.length} / {MIN_PHOTOS} φωτογραφίες
-              {photos.length < MIN_PHOTOS && (
-                <span className="text-destructive ml-1">
-                  — χρειάζεστε ακόμη {MIN_PHOTOS - photos.length}
-                </span>
+        {/* Photo grid with DnD */}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext items={photos} strategy={rectSortingStrategy}>
+            <div className="space-y-3">
+              {/* Slot 1: Cover photo — full width */}
+              {coverPhoto ? (
+                <SortablePhoto
+                  url={coverPhoto}
+                  index={0}
+                  onDelete={removePhoto}
+                />
+              ) : (
+                <div
+                  onClick={() => inputRef.current?.click()}
+                  className="aspect-[4/3] rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-foreground/40 transition-colors"
+                >
+                  <Camera className="w-10 h-10 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground font-medium">
+                    Φωτογραφία εξωφύλλου
+                  </span>
+                </div>
               )}
-            </p>
 
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext items={photos} strategy={rectSortingStrategy}>
+              {/* Slots 2-5: 2×2 grid */}
+              <div className="grid grid-cols-2 gap-3">
+                {photos.slice(1, 5).map((url, i) => (
+                  <SortablePhoto
+                    key={url}
+                    url={url}
+                    index={i + 1}
+                    onDelete={removePhoto}
+                  />
+                ))}
+
+                {/* Empty placeholder slots */}
+                {Array.from({ length: Math.max(0, 3 - Math.max(0, photos.length - 1)) }).map((_, i) => (
+                  <div
+                    key={`empty-${i}`}
+                    onClick={() => inputRef.current?.click()}
+                    className="aspect-square rounded-xl border-2 border-dashed border-border flex items-center justify-center cursor-pointer hover:border-foreground/40 transition-colors"
+                  >
+                    <ImageIcon className="w-8 h-8 text-muted-foreground/50" />
+                  </div>
+                ))}
+
+                {/* Add more slot (always the 5th position) */}
+                <button
+                  onClick={() => inputRef.current?.click()}
+                  className="aspect-square rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-2 hover:border-foreground/40 transition-colors"
+                >
+                  <Plus className="w-6 h-6 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground font-medium">
+                    Προσθήκη περισσότερων
+                  </span>
+                </button>
+              </div>
+
+              {/* Extra photos beyond 5 */}
+              {photos.length > 5 && (
                 <div className="grid grid-cols-2 gap-3">
-                  {photos.map((url, i) => (
+                  {photos.slice(5).map((url, i) => (
                     <SortablePhoto
                       key={url}
                       url={url}
-                      index={i}
+                      index={i + 5}
                       onDelete={removePhoto}
                     />
                   ))}
-
-                  <button
-                    onClick={() => inputRef.current?.click()}
-                    className="aspect-square rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-2 hover:border-foreground/40 transition-colors"
-                  >
-                    <ImagePlus className="w-6 h-6 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground font-medium">
-                      Προσθήκη περισσότερων
-                    </span>
-                  </button>
                 </div>
-              </SortableContext>
-            </DndContext>
-          </>
-        )}
+              )}
+            </div>
+          </SortableContext>
+        </DndContext>
 
         <input
           ref={inputRef}
@@ -248,7 +273,7 @@ const EditListing = () => {
       </div>
 
       <OnboardingFooter
-        onBack={handleClose}
+        onBack={handleBack}
         onNext={handleNext}
         nextDisabled={uploading}
         loading={uploading}
