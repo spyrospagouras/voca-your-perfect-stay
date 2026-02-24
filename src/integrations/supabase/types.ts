@@ -94,6 +94,38 @@ export type Database = {
           },
         ]
       }
+      listing_images: {
+        Row: {
+          created_at: string | null
+          id: string
+          listing_id: string
+          order_index: number
+          url: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          listing_id: string
+          order_index: number
+          url: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          listing_id?: string
+          order_index?: number
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_images_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listings: {
         Row: {
           amenities: string[] | null
