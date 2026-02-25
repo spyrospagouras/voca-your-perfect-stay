@@ -152,7 +152,7 @@ const EditListing = () => {
 
   const openSheet = () => setSheetOpen(true);
   const handleBack = () => navigate("/host/listings");
-  const handleNext = () => navigate("/host/listings");
+  const handleNext = () => navigate(`/host/edit/${id}/title`);
 
   if (loading) {
     return (
