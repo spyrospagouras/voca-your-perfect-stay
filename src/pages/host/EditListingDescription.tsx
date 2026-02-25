@@ -5,12 +5,12 @@ import { Textarea } from "@/components/ui/textarea";
 import OnboardingFooter from "@/components/onboarding/OnboardingFooter";
 import { supabase } from "@/integrations/supabase/client";
 
-const MAX_CHARS = 50;
+const MAX_CHARS = 500;
 
-const EditListingTitle = () => {
+const EditListingDescription = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -19,30 +19,29 @@ const EditListingTitle = () => {
     (async () => {
       const { data } = await supabase
         .from("listings")
-        .select("title")
+        .select("description")
         .eq("id", id)
         .single();
-      if (data) setTitle(data.title || "");
+      if (data) setDescription(data.description || "");
       setLoading(false);
     })();
   }, [id]);
 
   const handleChange = (val: string) => {
-    if (val.length <= MAX_CHARS) setTitle(val);
+    if (val.length <= MAX_CHARS) setDescription(val);
   };
 
-  const handleBack = () => navigate(`/host/edit/${id}`);
+  const handleBack = () => navigate(`/host/edit/${id}/title`);
 
   const handleNext = async () => {
     if (!id) return;
     setSaving(true);
     await supabase
       .from("listings")
-      .update({ title: title.trim() } as any)
+      .update({ description: description.trim() } as any)
       .eq("id", id);
     setSaving(false);
-    // Navigate to next step (highlights or next edit page)
-    navigate(`/host/edit/${id}/description`);
+    navigate("/host/listings");
   };
 
   if (loading) {
@@ -73,21 +72,21 @@ const EditListingTitle = () => {
       <div className="flex-1 flex flex-col justify-center px-6 max-w-lg mx-auto w-full">
         <p className="text-xs font-semibold text-muted-foreground mb-1">Βήμα 2</p>
         <h1 className="text-2xl font-bold text-foreground mb-1">
-          Τώρα, δώστε στον χώρο σας έναν τίτλο
+          Δημιουργήστε την περιγραφή σας
         </h1>
         <p className="text-sm text-muted-foreground mb-8">
-          Ένας σύντομος τίτλος κάνει τη μεγαλύτερη εντύπωση. Μην ανησυχείτε, μπορείτε πάντα να τον αλλάξετε.
+          Μοιραστείτε τι κάνει τον χώρο σας ξεχωριστό.
         </p>
 
         <Textarea
-          value={title}
+          value={description}
           onChange={(e) => handleChange(e.target.value)}
-          placeholder="π.χ. Φωτεινό διαμέρισμα στο κέντρο"
-          className="text-lg font-medium resize-none min-h-[120px] rounded-xl border-border focus-visible:ring-foreground"
+          placeholder="Περιγράψτε την ατμόσφαιρα, τη γειτονιά, τι θα βρουν οι επισκέπτες…"
+          className="text-base resize-none min-h-[180px] rounded-xl border-border focus-visible:ring-foreground"
           maxLength={MAX_CHARS}
         />
         <p className="text-xs text-muted-foreground text-right mt-2">
-          {title.length}/{MAX_CHARS}
+          {description.length}/{MAX_CHARS}
         </p>
       </div>
 
@@ -96,10 +95,10 @@ const EditListingTitle = () => {
         onNext={handleNext}
         nextDisabled={saving}
         loading={saving}
-        progress={90}
+        progress={95}
       />
     </div>
   );
 };
 
-export default EditListingTitle;
+export default EditListingDescription;
