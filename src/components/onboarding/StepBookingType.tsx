@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { Check, Zap, Eye } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import OnboardingFooter from "./OnboardingFooter";
 
 interface Props {
@@ -6,6 +8,8 @@ interface Props {
   onSelect: (type: string) => void;
   onNext: () => void;
   onBack: () => void;
+  termsAccepted?: boolean;
+  onTermsChange?: (accepted: boolean) => void;
 }
 
 const cards = [
@@ -49,7 +53,7 @@ const cards = [
   },
 ];
 
-const StepBookingType = ({ selected, onSelect, onNext, onBack }: Props) => {
+const StepBookingType = ({ selected, onSelect, onNext, onBack, termsAccepted = false, onTermsChange }: Props) => {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <div className="flex-1 px-6 pt-10 pb-6 max-w-4xl mx-auto w-full">
@@ -100,12 +104,32 @@ const StepBookingType = ({ selected, onSelect, onNext, onBack }: Props) => {
             );
           })}
         </div>
+
+        <div className="flex items-start gap-3 mt-6">
+          <Checkbox
+            id="terms"
+            checked={termsAccepted}
+            onCheckedChange={(checked) => onTermsChange?.(checked === true)}
+            className="mt-0.5"
+          />
+          <label htmlFor="terms" className="text-sm text-muted-foreground leading-relaxed">
+            Αποδέχομαι τους{" "}
+            <a
+              href="/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary font-semibold underline underline-offset-2 hover:text-primary/80"
+            >
+              Όρους Χρήσης
+            </a>
+          </label>
+        </div>
       </div>
 
       <OnboardingFooter
         onBack={onBack}
         onNext={onNext}
-        nextDisabled={!selected}
+        nextDisabled={!selected || !termsAccepted}
         nextLabel="Δημοσιεύστε"
         progress={92}
       />
