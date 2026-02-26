@@ -29,6 +29,7 @@ import EditListingDescription from "./pages/host/EditListingDescription";
 import EditIntro3 from "./pages/host/EditIntro3";
 import Chat from "./pages/Chat";
 import ListingDetail from "./pages/ListingDetail";
+import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -72,6 +73,7 @@ const App = () => (
             <Route path="/host/edit/:id/title" element={<EditListingTitle />} />
             <Route path="/host/edit/:id/description" element={<EditListingDescription />} />
             <Route path="/host/edit/:id/intro3" element={<EditIntro3 />} />
+            <Route path="/terms" element={<Terms />} />
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

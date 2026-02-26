@@ -125,6 +125,7 @@ const PartnerOnboarding = () => {
   const [description, setDescription] = useState(draft?.description || "");
   const [pricePerNight, setPricePerNight] = useState(draft?.pricePerNight || 50);
   const [bookingType, setBookingType] = useState(draft?.bookingType || "");
+  const [termsAccepted, setTermsAccepted] = useState(draft?.termsAccepted || false);
 
   // Persist draft to localStorage
   useEffect(() => {
@@ -263,6 +264,8 @@ const PartnerOnboarding = () => {
             highlights: highlights.length > 0 ? highlights : [],
             price_per_night: pricePerNight > 0 ? pricePerNight : null,
             location_name: [street, city].filter(Boolean).join(", ") || address,
+            terms_accepted: true,
+            terms_accepted_at: new Date().toISOString(),
           } as any)
           .eq("id", draftListingId.current);
       }
@@ -461,6 +464,8 @@ const PartnerOnboarding = () => {
           onSelect={setBookingType}
           onNext={handleFinish}
           onBack={goBack}
+          termsAccepted={termsAccepted}
+          onTermsChange={setTermsAccepted}
         />
       )}
 

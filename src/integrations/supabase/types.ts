@@ -163,6 +163,8 @@ export type Database = {
           show_exact_location: boolean
           status: string
           street: string | null
+          terms_accepted: boolean | null
+          terms_accepted_at: string | null
           title: string
           zip: string | null
         }
@@ -202,6 +204,8 @@ export type Database = {
           show_exact_location?: boolean
           status?: string
           street?: string | null
+          terms_accepted?: boolean | null
+          terms_accepted_at?: string | null
           title: string
           zip?: string | null
         }
@@ -241,6 +245,8 @@ export type Database = {
           show_exact_location?: boolean
           status?: string
           street?: string | null
+          terms_accepted?: boolean | null
+          terms_accepted_at?: string | null
           title?: string
           zip?: string | null
         }
@@ -437,6 +443,8 @@ export type Database = {
           show_exact_location: boolean
           status: string
           street: string | null
+          terms_accepted: boolean | null
+          terms_accepted_at: string | null
           title: string
           zip: string | null
         }[]
