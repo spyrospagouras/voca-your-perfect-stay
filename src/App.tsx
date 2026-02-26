@@ -26,6 +26,7 @@ import PartnerOnboarding from "./pages/host/PartnerOnboarding";
 import EditListing from "./pages/host/EditListing";
 import EditListingTitle from "./pages/host/EditListingTitle";
 import EditListingDescription from "./pages/host/EditListingDescription";
+import EditIntro3 from "./pages/host/EditIntro3";
 import Chat from "./pages/Chat";
 import ListingDetail from "./pages/ListingDetail";
 import NotFound from "./pages/NotFound";
@@ -70,6 +71,7 @@ const App = () => (
             <Route path="/host/edit/:id" element={<EditListing />} />
             <Route path="/host/edit/:id/title" element={<EditListingTitle />} />
             <Route path="/host/edit/:id/description" element={<EditListingDescription />} />
+            <Route path="/host/edit/:id/intro3" element={<EditIntro3 />} />
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
