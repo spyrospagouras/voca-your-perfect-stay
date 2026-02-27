@@ -130,7 +130,7 @@ const StepBookingType = ({ selected, onSelect, onNext, onBack, termsAccepted = f
         onBack={onBack}
         onNext={onNext}
         nextDisabled={!selected || !termsAccepted}
-        nextLabel="Δημοσιεύστε"
+        nextLabel="Επόμενο"
         progress={92}
       />
     </div>
