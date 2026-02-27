@@ -1,0 +1,1 @@
+ALTER TABLE public.availability ADD CONSTRAINT availability_listing_date_unique UNIQUE (listing_id, date);
