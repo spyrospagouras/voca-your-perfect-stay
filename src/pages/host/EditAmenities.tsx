@@ -1,74 +1,10 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Search, Plus, Check, X,
-  Wifi, Tv, UtensilsCrossed, WashingMachine, Car, AirVent, Flame, Briefcase,
-  Waves, Mountain, TreePine, Dumbbell, Wine, Music, Gamepad2,
-  ShieldCheck, BellRing, FireExtinguisher, HeartPulse,
-  Bath, Microwave, Coffee, Refrigerator, Utensils, Bed, Sofa, Fan,
-  type LucideIcon,
-} from "lucide-react";
+import { ArrowLeft, Search, Plus, Check, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import OnboardingFooter from "@/components/onboarding/OnboardingFooter";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-
-interface Amenity {
-  id: string;
-  label: string;
-  icon: LucideIcon;
-  category: string;
-}
-
-const CATEGORIES = [
-  "Όλες",
-  "Βασικές παροχές",
-  "Μπάνιο",
-  "Κουζίνα",
-  "Υπνοδωμάτιο",
-  "Ψυχαγωγία",
-  "Θέρμανση & Κλιματισμός",
-  "Εξωτερικοί χώροι",
-  "Ασφάλεια",
-];
-
-const ALL_AMENITIES: Amenity[] = [
-  // Βασικές παροχές
-  { id: "wifi", label: "Wi-Fi", icon: Wifi, category: "Βασικές παροχές" },
-  { id: "tv", label: "Τηλεόραση", icon: Tv, category: "Βασικές παροχές" },
-  { id: "parking", label: "Πάρκινγκ", icon: Car, category: "Βασικές παροχές" },
-  { id: "workspace", label: "Χώρος εργασίας", icon: Briefcase, category: "Βασικές παροχές" },
-  { id: "washer", label: "Πλυντήριο", icon: WashingMachine, category: "Βασικές παροχές" },
-  { id: "sofa", label: "Καναπές", icon: Sofa, category: "Βασικές παροχές" },
-  // Μπάνιο
-  { id: "bath", label: "Μπανιέρα", icon: Bath, category: "Μπάνιο" },
-  { id: "hairdryer", label: "Πιστολάκι μαλλιών", icon: Fan, category: "Μπάνιο" },
-  // Κουζίνα
-  { id: "kitchen", label: "Κουζίνα", icon: UtensilsCrossed, category: "Κουζίνα" },
-  { id: "microwave", label: "Φούρνος μικροκυμάτων", icon: Microwave, category: "Κουζίνα" },
-  { id: "coffee", label: "Καφετιέρα", icon: Coffee, category: "Κουζίνα" },
-  { id: "fridge", label: "Ψυγείο", icon: Refrigerator, category: "Κουζίνα" },
-  { id: "mini_fridge", label: "Ψυγειάκι", icon: Refrigerator, category: "Κουζίνα" },
-  { id: "utensils", label: "Σκεύη & πιάτα", icon: Utensils, category: "Κουζίνα" },
-  // Υπνοδωμάτιο
-  { id: "bed_linen", label: "Κλινοσκεπάσματα", icon: Bed, category: "Υπνοδωμάτιο" },
-  // Ψυχαγωγία
-  { id: "pool", label: "Πισίνα", icon: Waves, category: "Ψυχαγωγία" },
-  { id: "gym", label: "Γυμναστήριο", icon: Dumbbell, category: "Ψυχαγωγία" },
-  { id: "wine", label: "Κάβα κρασιών", icon: Wine, category: "Ψυχαγωγία" },
-  { id: "music", label: "Μουσική", icon: Music, category: "Ψυχαγωγία" },
-  { id: "games", label: "Επιτραπέζια παιχνίδια", icon: Gamepad2, category: "Ψυχαγωγία" },
-  // Θέρμανση & Κλιματισμός
-  { id: "ac", label: "Κλιματισμός", icon: AirVent, category: "Θέρμανση & Κλιματισμός" },
-  { id: "heating", label: "Θέρμανση", icon: Flame, category: "Θέρμανση & Κλιματισμός" },
-  // Εξωτερικοί χώροι
-  { id: "mountain_view", label: "Θέα βουνό", icon: Mountain, category: "Εξωτερικοί χώροι" },
-  { id: "garden", label: "Κήπος", icon: TreePine, category: "Εξωτερικοί χώροι" },
-  // Ασφάλεια
-  { id: "smoke_alarm", label: "Ανιχνευτής καπνού", icon: ShieldCheck, category: "Ασφάλεια" },
-  { id: "carbon_alarm", label: "Ανιχνευτής CO", icon: BellRing, category: "Ασφάλεια" },
-  { id: "fire_extinguisher", label: "Πυροσβεστήρας", icon: FireExtinguisher, category: "Ασφάλεια" },
-  { id: "first_aid", label: "Πρώτες βοήθειες", icon: HeartPulse, category: "Ασφάλεια" },
-];
+import { ALL_AMENITIES, AMENITY_CATEGORIES } from "@/data/amenitiesList";
 
 const EditAmenities = () => {
   const { id } = useParams<{ id: string }>();
@@ -175,7 +111,7 @@ const EditAmenities = () => {
       {/* Category chips */}
       <div className="px-4 py-3 border-b border-border overflow-x-auto">
         <div className="flex gap-2 min-w-max">
-          {CATEGORIES.map((cat) => (
+          {AMENITY_CATEGORIES.map((cat) => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
