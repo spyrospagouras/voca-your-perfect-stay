@@ -25,6 +25,7 @@ import StepPricing from "@/components/onboarding/StepPricing";
 import StepReview from "@/components/onboarding/StepReview";
 import StepIntro4 from "@/components/onboarding/StepIntro4";
 import StepBookingType from "@/components/onboarding/StepBookingType";
+import StepContactInfo from "@/components/onboarding/StepContactInfo";
 
 export interface OnboardingData {
   email: string;
@@ -57,9 +58,10 @@ type Step =
   | "pricing"
   | "review"
   | "intro4"
-  | "booking-type";
+  | "booking-type"
+  | "contact-info";
 
-const FLOW: Step[] = [
+const BASE_FLOW: Step[] = [
   "landing",
   "intro",
   "category",
@@ -126,6 +128,19 @@ const PartnerOnboarding = () => {
   const [pricePerNight, setPricePerNight] = useState(draft?.pricePerNight || 50);
   const [bookingType, setBookingType] = useState(draft?.bookingType || "");
   const [termsAccepted, setTermsAccepted] = useState(draft?.termsAccepted || false);
+  const [contactData, setContactData] = useState({
+    contactMobile: draft?.contactMobile || "",
+    contactLandline: draft?.contactLandline || "",
+    contactEmail: draft?.contactEmail || "",
+    contactWebsite: draft?.contactWebsite || "",
+    contactFacebook: draft?.contactFacebook || "",
+    contactInstagram: draft?.contactInstagram || "",
+  });
+
+  // Dynamic flow: add contact-info after booking-type for listing_only
+  const FLOW: Step[] = bookingType === "listing_only"
+    ? [...BASE_FLOW, "contact-info"]
+    : BASE_FLOW;
 
   // Persist draft to localStorage
   useEffect(() => {
@@ -151,11 +166,17 @@ const PartnerOnboarding = () => {
           description,
           pricePerNight,
           bookingType,
+          contactMobile: contactData.contactMobile,
+          contactLandline: contactData.contactLandline,
+          contactEmail: contactData.contactEmail,
+          contactWebsite: contactData.contactWebsite,
+          contactFacebook: contactData.contactFacebook,
+          contactInstagram: contactData.contactInstagram,
           listingId: draftListingId.current,
         })
       );
     }
-  }, [step, category, privacyType, address, lat, lng, street, zip, city, showExact, basics, amenities, photos, listingTitle, highlights, description, pricePerNight, bookingType]);
+  }, [step, category, privacyType, address, lat, lng, street, zip, city, showExact, basics, amenities, photos, listingTitle, highlights, description, pricePerNight, bookingType, contactData]);
 
   // --- Supabase draft sync helpers ---
   const upsertDraft = async (extraFields: Record<string, any> = {}) => {
@@ -186,6 +207,12 @@ const PartnerOnboarding = () => {
       highlights: highlights.length > 0 ? highlights : [],
       price_per_night: pricePerNight > 0 ? pricePerNight : null,
       booking_type: bookingType || null,
+      contact_mobile: contactData.contactMobile || null,
+      contact_landline: contactData.contactLandline || null,
+      contact_email: contactData.contactEmail || null,
+      contact_website: contactData.contactWebsite || null,
+      contact_facebook: contactData.contactFacebook || null,
+      contact_instagram: contactData.contactInstagram || null,
       ...extraFields,
     };
 
@@ -223,7 +250,7 @@ const PartnerOnboarding = () => {
     setStep("intro");
   };
 
-  const DATA_STEPS: Step[] = ["category", "privacy", "location", "address", "privacy-toggle", "pin-refine", "basics", "amenities", "photos", "title", "highlights", "description", "pricing", "booking-type"];
+  const DATA_STEPS: Step[] = ["category", "privacy", "location", "address", "privacy-toggle", "pin-refine", "basics", "amenities", "photos", "title", "highlights", "description", "pricing", "booking-type", "contact-info"];
 
   const goNextFrom = async (current: Step) => {
     const idx = FLOW.indexOf(current);
@@ -266,6 +293,12 @@ const PartnerOnboarding = () => {
             location_name: [street, city].filter(Boolean).join(", ") || address,
             terms_accepted: true,
             terms_accepted_at: new Date().toISOString(),
+            contact_mobile: contactData.contactMobile || null,
+            contact_landline: contactData.contactLandline || null,
+            contact_email: contactData.contactEmail || null,
+            contact_website: contactData.contactWebsite || null,
+            contact_facebook: contactData.contactFacebook || null,
+            contact_instagram: contactData.contactInstagram || null,
           } as any)
           .eq("id", draftListingId.current);
       }
@@ -462,10 +495,20 @@ const PartnerOnboarding = () => {
         <StepBookingType
           selected={bookingType}
           onSelect={setBookingType}
-          onNext={handleFinish}
+          onNext={bookingType === "listing_only" ? () => goNextFrom("booking-type") : handleFinish}
           onBack={goBack}
           termsAccepted={termsAccepted}
           onTermsChange={setTermsAccepted}
+        />
+      )}
+
+      {step === "contact-info" && (
+        <StepContactInfo
+          data={contactData}
+          onChange={setContactData}
+          onNext={handleFinish}
+          onBack={goBack}
+          loading={saving}
         />
       )}
 
