@@ -1,3 +1,5 @@
+import { ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import heroImg from "@/assets/host-landing-hero.jpg";
 
 interface Props {
@@ -5,8 +7,19 @@ interface Props {
 }
 
 const HostLanding = ({ onStart }: Props) => {
+  const navigate = useNavigate();
+
   return (
     <div className="relative min-h-screen flex flex-col">
+      {/* Back button */}
+      <button
+        onClick={() => navigate("/")}
+        className="absolute top-4 left-4 z-20 w-9 h-9 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-sm hover:bg-black/60 transition-colors"
+        aria-label="Επιστροφή στην αρχική"
+      >
+        <ArrowLeft className="w-5 h-5 text-white" />
+      </button>
+
       {/* Hero image */}
       <div className="absolute inset-0">
         <img
