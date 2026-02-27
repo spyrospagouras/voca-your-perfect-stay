@@ -69,11 +69,14 @@ const StepBookingType = ({ selected, onSelect, onNext, onBack, termsAccepted = f
             return (
               <button
                 key={card.id}
-                onClick={() => onSelect(card.id)}
+                onClick={() => card.id !== "instant" && onSelect(card.id)}
+                disabled={card.id === "instant"}
                 className={`w-full text-left rounded-xl border-2 p-5 transition-all relative ${
-                  isSelected
-                    ? "border-foreground bg-muted/30"
-                    : "border-border hover:border-muted-foreground/40"
+                  card.id === "instant"
+                    ? "border-border opacity-50 cursor-not-allowed"
+                    : isSelected
+                      ? "border-foreground bg-muted/30"
+                      : "border-border hover:border-muted-foreground/40"
                 }`}
               >
                 {isSelected && (
