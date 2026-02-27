@@ -3,15 +3,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Calendar, Settings, ArrowUp } from "lucide-react";
-import { format, addMonths, startOfMonth, getDaysInMonth, getDay, isSameDay, isBefore, startOfDay } from "date-fns";
+import { format, addMonths, startOfMonth, getDaysInMonth, getDay, isSameDay, isBefore, startOfDay, eachDayOfInterval } from "date-fns";
 import { el } from "date-fns/locale";
-import {
-  Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter,
-} from "@/components/ui/drawer";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import CalendarOverlay from "@/components/host/CalendarOverlay";
 
 const DAY_NAMES = ["Δ", "Τ", "Τ", "Π", "Π", "Σ", "Κ"];
 
@@ -30,7 +25,6 @@ const EditCalendar = () => {
   const today = startOfDay(new Date());
   const MONTHS_TO_SHOW = 12;
 
-  // Fetch listing for title & default price
   const { data: listing } = useQuery({
     queryKey: ["listing", id],
     queryFn: async () => {
@@ -45,7 +39,6 @@ const EditCalendar = () => {
     enabled: !!id,
   });
 
-  // Fetch availability entries for next 12 months
   const { data: availabilityData } = useQuery({
     queryKey: ["availability-calendar", id],
     queryFn: async () => {
@@ -63,14 +56,12 @@ const EditCalendar = () => {
     enabled: !!id,
   });
 
-  // Build lookup map
   const availMap = useMemo(() => {
     const map = new Map<string, AvailabilityEntry>();
     availabilityData?.forEach((e) => map.set(e.date, e));
     return map;
   }, [availabilityData]);
 
-  // Generate months
   const months = useMemo(() => {
     const arr = [];
     for (let i = 0; i < MONTHS_TO_SHOW; i++) {
@@ -79,56 +70,77 @@ const EditCalendar = () => {
     return arr;
   }, []);
 
-  // Selected date + drawer
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  // Multi-selection state
+  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
+  const [rangeStart, setRangeStart] = useState<Date | null>(null);
   const [editPrice, setEditPrice] = useState("");
   const [editAvailable, setEditAvailable] = useState(true);
+  const [note, setNote] = useState("");
 
-  const openDrawer = (date: Date) => {
-    const key = format(date, "yyyy-MM-dd");
-    const entry = availMap.get(key);
-    setSelectedDate(date);
-    setEditPrice(
-      entry?.price != null
-        ? String(entry.price)
-        : listing?.price_per_night != null
-        ? String(listing.price_per_night)
-        : ""
-    );
-    setEditAvailable(entry ? !entry.is_blocked : true);
-    setDrawerOpen(true);
+  const isSelected = useCallback(
+    (date: Date) => selectedDates.some((d) => isSameDay(d, date)),
+    [selectedDates]
+  );
+
+  const handleDayClick = (date: Date) => {
+    if (!rangeStart) {
+      // First click – start selection
+      setRangeStart(date);
+      setSelectedDates([date]);
+      // Initialize overlay values from this date
+      const key = format(date, "yyyy-MM-dd");
+      const entry = availMap.get(key);
+      setEditPrice(
+        entry?.price != null
+          ? String(entry.price)
+          : listing?.price_per_night != null
+          ? String(listing.price_per_night)
+          : ""
+      );
+      setEditAvailable(entry ? !entry.is_blocked : true);
+      setNote("");
+    } else {
+      // Second click – create range
+      const start = rangeStart < date ? rangeStart : date;
+      const end = rangeStart < date ? date : rangeStart;
+      const range = eachDayOfInterval({ start, end });
+      setSelectedDates(range);
+      setRangeStart(null); // Allow next click to start fresh
+    }
   };
 
-  // Upsert mutation
+  const clearSelection = () => {
+    setSelectedDates([]);
+    setRangeStart(null);
+    setNote("");
+  };
+
+  // Bulk upsert mutation
   const upsertMutation = useMutation({
     mutationFn: async () => {
-      if (!selectedDate || !id) return;
-      const dateStr = format(selectedDate, "yyyy-MM-dd");
+      if (selectedDates.length === 0 || !id) return;
       const priceNum = editPrice ? parseFloat(editPrice) : null;
+
+      const rows = selectedDates.map((d) => ({
+        listing_id: id,
+        date: format(d, "yyyy-MM-dd"),
+        price: priceNum,
+        is_blocked: !editAvailable,
+      }));
 
       const { error } = await supabase
         .from("availability")
-        .upsert(
-          {
-            listing_id: id,
-            date: dateStr,
-            price: priceNum,
-            is_blocked: !editAvailable,
-          },
-          { onConflict: "listing_id,date" }
-        );
+        .upsert(rows, { onConflict: "listing_id,date" });
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["availability-calendar", id] });
-      setDrawerOpen(false);
+      clearSelection();
       toast.success("Ενημερώθηκε!");
     },
     onError: () => toast.error("Σφάλμα κατά την αποθήκευση"),
   });
 
-  // Scroll to today on mount
   useEffect(() => {
     setTimeout(() => todayRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 300);
   }, []);
@@ -138,6 +150,7 @@ const EditCalendar = () => {
   }, []);
 
   const defaultPrice = listing?.price_per_night;
+  const hasSelection = selectedDates.length > 0;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -161,7 +174,7 @@ const EditCalendar = () => {
         </div>
       </div>
 
-      {/* Day headers - sticky */}
+      {/* Day headers */}
       <div className="sticky top-[57px] z-20 bg-background border-b border-border px-4">
         <div className="grid grid-cols-7 gap-1">
           {DAY_NAMES.map((d, i) => (
@@ -171,12 +184,12 @@ const EditCalendar = () => {
       </div>
 
       {/* Scrollable months */}
-      <div className="flex-1 overflow-y-auto px-4 pb-24">
+      <div className={`flex-1 overflow-y-auto px-4 ${hasSelection ? "pb-52" : "pb-24"}`}>
         {months.map((monthStart) => {
           const year = monthStart.getFullYear();
           const month = monthStart.getMonth();
           const daysInMonth = getDaysInMonth(monthStart);
-          const firstDayOfWeek = (getDay(monthStart) + 6) % 7; // Mon=0
+          const firstDayOfWeek = (getDay(monthStart) + 6) % 7;
           const cells: (number | null)[] = [];
           for (let i = 0; i < firstDayOfWeek; i++) cells.push(null);
           for (let d = 1; d <= daysInMonth; d++) cells.push(d);
@@ -196,26 +209,38 @@ const EditCalendar = () => {
                   const price = entry?.price ?? defaultPrice;
                   const isToday = isSameDay(date, today);
                   const isPast = isBefore(date, today);
+                  const selected = isSelected(date);
+
+                  // Check if in-range (between first and last selected)
+                  let inRange = false;
+                  if (selectedDates.length >= 2) {
+                    const sorted = [...selectedDates].sort((a, b) => a.getTime() - b.getTime());
+                    inRange = date >= sorted[0] && date <= sorted[sorted.length - 1] && !selected;
+                  }
 
                   return (
                     <div
                       key={i}
                       ref={isToday ? todayRef : undefined}
-                      onClick={() => !isPast && openDrawer(date)}
+                      onClick={() => !isPast && handleDayClick(date)}
                       className={`aspect-square flex flex-col items-center justify-center rounded-lg transition-colors relative cursor-pointer ${
                         isPast ? "opacity-30 cursor-default" : "hover:bg-muted"
-                      } ${isToday ? "ring-2 ring-destructive" : ""}`}
+                      } ${isToday && !selected ? "ring-2 ring-destructive" : ""} ${
+                        selected ? "bg-foreground" : inRange ? "bg-muted" : ""
+                      }`}
                     >
                       <span
                         className={`text-sm font-medium ${
-                          isToday
+                          selected
+                            ? "text-background"
+                            : isToday
                             ? "bg-destructive text-destructive-foreground w-7 h-7 rounded-full flex items-center justify-center"
                             : "text-foreground"
-                        } ${isBlocked ? "line-through text-muted-foreground" : ""}`}
+                        } ${isBlocked && !selected ? "line-through text-muted-foreground" : ""}`}
                       >
                         {day}
                       </span>
-                      {price != null && (
+                      {price != null && !selected && (
                         <span
                           className={`text-[10px] mt-0.5 ${
                             isBlocked
@@ -237,55 +262,32 @@ const EditCalendar = () => {
         })}
       </div>
 
-      {/* Floating Today Button */}
-      <div className="fixed bottom-6 right-4 z-40">
-        <button
-          onClick={scrollToToday}
-          className="flex items-center gap-2 bg-foreground text-background px-4 py-2.5 rounded-full shadow-lg hover:bg-foreground/90 transition-colors"
-        >
-          <ArrowUp className="w-4 h-4" />
-          <span className="text-sm font-medium">Σήμερα</span>
-        </button>
-      </div>
+      {/* Floating Today Button – hide when overlay is visible */}
+      {!hasSelection && (
+        <div className="fixed bottom-6 right-4 z-40">
+          <button
+            onClick={scrollToToday}
+            className="flex items-center gap-2 bg-foreground text-background px-4 py-2.5 rounded-full shadow-lg hover:bg-foreground/90 transition-colors"
+          >
+            <ArrowUp className="w-4 h-4" />
+            <span className="text-sm font-medium">Σήμερα</span>
+          </button>
+        </div>
+      )}
 
-      {/* Edit Drawer */}
-      <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
-        <DrawerContent className="max-w-lg mx-auto">
-          <DrawerHeader>
-            <DrawerTitle>
-              {selectedDate ? format(selectedDate, "EEEE, d MMMM yyyy", { locale: el }) : ""}
-            </DrawerTitle>
-          </DrawerHeader>
-          <div className="px-6 space-y-5 pb-2">
-            {/* Price */}
-            <div>
-              <label className="text-sm font-medium text-foreground mb-1.5 block">Τιμή (€)</label>
-              <Input
-                type="number"
-                inputMode="numeric"
-                value={editPrice}
-                onChange={(e) => setEditPrice(e.target.value)}
-                placeholder={defaultPrice != null ? `Προεπιλογή: €${defaultPrice}` : "Τιμή"}
-                className="text-lg"
-              />
-            </div>
-            {/* Availability toggle */}
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-foreground">Διαθέσιμο</span>
-              <Switch checked={editAvailable} onCheckedChange={setEditAvailable} />
-            </div>
-          </div>
-          <DrawerFooter>
-            <Button
-              onClick={() => upsertMutation.mutate()}
-              disabled={upsertMutation.isPending}
-              className="w-full"
-            >
-              {upsertMutation.isPending ? "Αποθήκευση..." : "Αποθήκευση"}
-            </Button>
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
+      {/* Floating Bottom Overlay */}
+      <CalendarOverlay
+        selectedDates={selectedDates}
+        editPrice={editPrice}
+        setEditPrice={setEditPrice}
+        editAvailable={editAvailable}
+        setEditAvailable={setEditAvailable}
+        onCancel={clearSelection}
+        onSave={() => upsertMutation.mutate()}
+        isSaving={upsertMutation.isPending}
+        note={note}
+        setNote={setNote}
+      />
     </div>
   );
 };
