@@ -19,7 +19,7 @@ const EditIntro3 = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const handleBack = () => navigate(`/host/edit/${id}/description`);
+  const handleBack = () => navigate(`/host/edit/${id}/amenities`);
   const handleNext = () => navigate(`/host/edit/${id}/pricing`);
 
   return (

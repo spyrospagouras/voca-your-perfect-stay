@@ -26,6 +26,7 @@ import PartnerOnboarding from "./pages/host/PartnerOnboarding";
 import EditListing from "./pages/host/EditListing";
 import EditListingTitle from "./pages/host/EditListingTitle";
 import EditListingDescription from "./pages/host/EditListingDescription";
+import EditAmenities from "./pages/host/EditAmenities";
 import EditIntro3 from "./pages/host/EditIntro3";
 import EditCalendar from "./pages/host/EditCalendar";
 import Chat from "./pages/Chat";
@@ -73,6 +74,7 @@ const App = () => (
             <Route path="/host/edit/:id" element={<EditListing />} />
             <Route path="/host/edit/:id/title" element={<EditListingTitle />} />
             <Route path="/host/edit/:id/description" element={<EditListingDescription />} />
+            <Route path="/host/edit/:id/amenities" element={<EditAmenities />} />
             <Route path="/host/edit/:id/intro3" element={<EditIntro3 />} />
             <Route path="/host/edit/:id/pricing" element={<EditCalendar />} />
             <Route path="/terms" element={<Terms />} />

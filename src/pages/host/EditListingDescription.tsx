@@ -41,7 +41,7 @@ const EditListingDescription = () => {
       .update({ description: description.trim() } as any)
       .eq("id", id);
     setSaving(false);
-    navigate(`/host/edit/${id}/intro3`);
+    navigate(`/host/edit/${id}/amenities`);
   };
 
   if (loading) {
