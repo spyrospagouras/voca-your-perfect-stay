@@ -118,6 +118,23 @@ const EditCalendar = () => {
     setBlockReason("");
   };
 
+  // Publish mutation
+  const publishMutation = useMutation({
+    mutationFn: async () => {
+      if (!id) return;
+      const { error } = await supabase
+        .from("listings")
+        .update({ status: "active" })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Η καταχώρηση δημοσιεύτηκε!");
+      navigate("/host/listings");
+    },
+    onError: () => toast.error("Σφάλμα κατά τη δημοσίευση"),
+  });
+
   // Bulk upsert mutation
   const upsertMutation = useMutation({
     mutationFn: async () => {
@@ -288,10 +305,11 @@ const EditCalendar = () => {
           </div>
           <div className="fixed bottom-6 right-4 z-40">
             <button
-              onClick={() => navigate(`/host/edit/${id}`)}
-              className="flex items-center gap-2 bg-foreground text-background px-4 py-2.5 rounded-full shadow-lg hover:bg-foreground/90 transition-colors"
+              onClick={() => publishMutation.mutate()}
+              disabled={publishMutation.isPending}
+              className="flex items-center gap-2 bg-foreground text-background px-4 py-2.5 rounded-full shadow-lg hover:bg-foreground/90 transition-colors disabled:opacity-50"
             >
-              <span className="text-sm font-medium">Επόμενο</span>
+              <span className="text-sm font-medium">{publishMutation.isPending ? "Δημοσίευση..." : "Δημοσίευση"}</span>
             </button>
           </div>
         </>
