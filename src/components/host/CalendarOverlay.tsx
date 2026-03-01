@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { el } from "date-fns/locale";
 import { X, Check, Plus, Pencil, Square, CheckSquare } from "lucide-react";
+import PriceEditOverlay from "./PriceEditOverlay";
 
 interface CalendarOverlayProps {
   selectedDates: Date[];
@@ -32,6 +33,7 @@ const CalendarOverlay = ({
 }: CalendarOverlayProps) => {
   const [showNote, setShowNote] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [showPriceEdit, setShowPriceEdit] = useState(false);
 
   const isOpen = selectedDates.length > 0;
 
@@ -146,20 +148,16 @@ const CalendarOverlay = ({
           </div>
         </div>
 
-        {/* Right Card – Pricing */}
-        <div className="flex-1 bg-neutral-900 rounded-2xl p-4 flex flex-col justify-between min-h-[170px]">
+        {/* Right Card – Pricing (clickable) */}
+        <div
+          onClick={() => setShowPriceEdit(true)}
+          className="flex-1 bg-neutral-900 rounded-2xl p-4 flex flex-col justify-between min-h-[170px] cursor-pointer active:scale-[0.98] transition-transform"
+        >
           <div>
             <span className="text-neutral-400 text-xs font-medium">{dateLabel}</span>
             <div className="flex items-baseline gap-1 mt-1.5">
               <span className="text-white text-3xl font-bold">€</span>
-              <input
-                type="number"
-                inputMode="numeric"
-                value={editPrice}
-                onChange={(e) => setEditPrice(e.target.value)}
-                className="bg-transparent text-white text-3xl font-bold w-24 outline-none border-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                placeholder="0"
-              />
+              <span className="text-white text-3xl font-bold">{editPrice || "0"}</span>
             </div>
             <span className="text-neutral-500 text-[11px] mt-1.5 block">Έξυπνη τιμολόγηση</span>
           </div>
@@ -170,6 +168,18 @@ const CalendarOverlay = ({
           </button>
         </div>
       </div>
+
+      {/* Full-screen price editor */}
+      <PriceEditOverlay
+        isOpen={showPriceEdit}
+        selectedDates={selectedDates}
+        initialPrice={editPrice}
+        onSave={(newPrice) => {
+          setEditPrice(newPrice);
+          setShowPriceEdit(false);
+        }}
+        onClose={() => setShowPriceEdit(false)}
+      />
     </div>
   );
 };
