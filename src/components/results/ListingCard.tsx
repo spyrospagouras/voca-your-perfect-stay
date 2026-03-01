@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Star } from "lucide-react";
 import type { Listing } from "@/data/mockListings";
 
@@ -7,8 +8,11 @@ interface ListingCardProps {
   onHover: (id: string | null) => void;
 }
 
-const ListingCard = ({ listing, isActive, onHover }: ListingCardProps) => (
+const ListingCard = ({ listing, isActive, onHover }: ListingCardProps) => {
+  const navigate = useNavigate();
+  return (
   <div
+    onClick={() => navigate(`/listing/${listing.id}`)}
     onMouseEnter={() => onHover(listing.id)}
     onMouseLeave={() => onHover(null)}
     className={`flex gap-4 p-3 rounded-xl cursor-pointer transition-colors ${
@@ -41,6 +45,7 @@ const ListingCard = ({ listing, isActive, onHover }: ListingCardProps) => (
       </p>
     </div>
   </div>
-);
+  );
+};
 
 export default ListingCard;

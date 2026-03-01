@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Heart, Star } from "lucide-react";
 import type { Listing } from "@/data/mockListings";
 
@@ -5,8 +6,10 @@ interface PropertyCardSheetProps {
   listing: Listing;
 }
 
-const PropertyCardSheet = ({ listing }: PropertyCardSheetProps) => (
-  <div className="mb-4">
+const PropertyCardSheet = ({ listing }: PropertyCardSheetProps) => {
+  const navigate = useNavigate();
+  return (
+  <div className="mb-4" onClick={() => navigate(`/listing/${listing.id}`)} role="button">
     {/* Image */}
     <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-muted mb-2">
       <img
@@ -45,6 +48,7 @@ const PropertyCardSheet = ({ listing }: PropertyCardSheetProps) => (
       </div>
     </div>
   </div>
-);
+  );
+};
 
 export default PropertyCardSheet;
