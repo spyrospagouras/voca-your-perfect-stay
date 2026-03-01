@@ -148,6 +148,25 @@ const CalendarOverlay = ({
           </div>
         </div>
 
+        {/* Right Card – Pricing (clickable) */}
+        <div
+          onClick={() => setShowPriceEdit(true)}
+          className="flex-1 bg-neutral-900 rounded-2xl p-4 flex flex-col justify-between min-h-[200px] cursor-pointer active:scale-[0.98] transition-transform"
+        >
+          <div>
+            <span className="text-neutral-400 text-xs font-medium">{dateLabel}</span>
+            <div className="flex items-baseline gap-1 mt-1.5">
+              <span className="text-white text-3xl font-bold">€</span>
+              <span className="text-white text-3xl font-bold">{editPrice || "0"}</span>
+            </div>
+            <span className="text-neutral-500 text-[11px] mt-1.5 block">Έξυπνη τιμολόγηση</span>
+          </div>
+
+          <button className="flex items-center gap-1.5 text-neutral-400 text-xs mt-3 hover:text-neutral-300 transition-colors">
+            <Plus className="w-3.5 h-3.5" />
+            <span>Εξατομικευμένες ρυθμίσεις</span>
+          </button>
+        </div>
       </div>
 
       {/* Full-screen price editor */}
