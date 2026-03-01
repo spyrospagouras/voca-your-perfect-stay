@@ -12,6 +12,7 @@ import ListingCard from "@/components/results/ListingCard";
 import BottomSheet from "@/components/results/BottomSheet";
 import PropertyCardSheet from "@/components/results/PropertyCardSheet";
 import BottomNavigation from "@/components/layout/BottomNavigation";
+import FiltersModal, { type SearchFilters } from "@/components/filters/FiltersModal";
 
 const DEFAULT_CENTER: [number, number] = [37.9755, 23.7348];
 const DEFAULT_ZOOM = 12;
@@ -35,6 +36,8 @@ const SearchResults = () => {
   const [activeListing, setActiveListing] = useState<string | null>(null);
   const [bounds, setBounds] = useState<LatLngBounds | null>(null);
   const [showSearchArea, setShowSearchArea] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<SearchFilters | null>(null);
   const moveCountRef = useRef(0);
 
   const { listings: allListings, loading, fetchListings } = useSupabaseListings();
@@ -44,9 +47,22 @@ const SearchResults = () => {
   }, [fetchListings, guestsParam, checkIn, checkOut]);
 
   const visibleListings = useMemo(() => {
-    if (!bounds) return allListings;
-    return allListings.filter((l) => bounds.contains([l.lat, l.lng]));
-  }, [bounds, allListings]);
+    let filtered = allListings;
+    if (bounds) {
+      filtered = filtered.filter((l) => bounds.contains([l.lat, l.lng]));
+    }
+    if (activeFilters) {
+      const f = activeFilters;
+      if (f.spaceType === "entire") filtered = filtered.filter((l) => l.type?.includes("Ολόκληρο") || l.type?.includes("entire"));
+      if (f.spaceType === "room") filtered = filtered.filter((l) => l.type?.includes("Δωμάτιο") || l.type?.includes("room"));
+      if (f.priceMin > 10) filtered = filtered.filter((l) => l.price >= f.priceMin);
+      if (f.priceMax < 500) filtered = filtered.filter((l) => l.price <= f.priceMax);
+      if (f.bedrooms > 0) filtered = filtered.filter((l) => l.bedrooms >= f.bedrooms);
+      if (f.beds > 0) filtered = filtered.filter((l) => l.beds >= f.beds);
+      if (f.bathrooms > 0) filtered = filtered.filter((l) => l.bathrooms >= f.bathrooms);
+    }
+    return filtered;
+  }, [bounds, allListings, activeFilters]);
 
   const handleBoundsChange = useCallback((newBounds: LatLngBounds) => {
     setBounds(newBounds);
@@ -120,7 +136,10 @@ const SearchResults = () => {
               )}
             </div>
           </button>
-          <button className="w-10 h-10 flex items-center justify-center rounded-full bg-card border border-border shadow-lg hover:shadow-xl transition-shadow shrink-0">
+          <button
+            onClick={() => setShowFilters(true)}
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-card border border-border shadow-lg hover:shadow-xl transition-shadow shrink-0"
+          >
             <SlidersHorizontal className="w-4 h-4 text-foreground" />
           </button>
         </div>
@@ -206,6 +225,15 @@ const SearchResults = () => {
       <div className="md:hidden">
         <BottomNavigation />
       </div>
+
+      {/* Filters Modal */}
+      <FiltersModal
+        open={showFilters}
+        onClose={() => setShowFilters(false)}
+        onApply={setActiveFilters}
+        totalResults={visibleListings.length}
+        initialFilters={activeFilters || undefined}
+      />
     </div>
   );
 };
