@@ -76,6 +76,7 @@ const EditCalendar = () => {
   const [editPrice, setEditPrice] = useState("");
   const [editAvailable, setEditAvailable] = useState(true);
   const [note, setNote] = useState("");
+  const [blockReason, setBlockReason] = useState("");
 
   const isSelected = useCallback(
     (date: Date) => selectedDates.some((d) => isSameDay(d, date)),
@@ -98,6 +99,7 @@ const EditCalendar = () => {
           : ""
       );
       setEditAvailable(entry ? !entry.is_blocked : true);
+      setBlockReason(entry?.is_blocked ? "Αποκλείστηκε από εσάς" : "");
       setNote("");
     } else {
       // Second click – create range
@@ -113,6 +115,7 @@ const EditCalendar = () => {
     setSelectedDates([]);
     setRangeStart(null);
     setNote("");
+    setBlockReason("");
   };
 
   // Bulk upsert mutation
@@ -287,6 +290,7 @@ const EditCalendar = () => {
         isSaving={upsertMutation.isPending}
         note={note}
         setNote={setNote}
+        blockReason={blockReason}
       />
     </div>
   );
