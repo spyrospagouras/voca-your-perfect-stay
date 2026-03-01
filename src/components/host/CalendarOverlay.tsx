@@ -1,8 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { format } from "date-fns";
 import { el } from "date-fns/locale";
 import { X, Check, Plus, Pencil, Square, CheckSquare } from "lucide-react";
-import PriceEditOverlay from "./PriceEditOverlay";
 
 interface CalendarOverlayProps {
   selectedDates: Date[];
@@ -33,7 +32,7 @@ const CalendarOverlay = ({
 }: CalendarOverlayProps) => {
   const [showNote, setShowNote] = useState(false);
   const [visible, setVisible] = useState(false);
-  const [showPriceEdit, setShowPriceEdit] = useState(false);
+  const priceInputRef = useRef<HTMLInputElement>(null);
 
   const isOpen = selectedDates.length > 0;
 
@@ -148,16 +147,27 @@ const CalendarOverlay = ({
           </div>
         </div>
 
-        {/* Right Card – Pricing (clickable) */}
+        {/* Right Card – Pricing (inline edit) */}
         <div
-          onClick={() => setShowPriceEdit(true)}
-          className="flex-1 bg-neutral-900 rounded-2xl p-4 flex flex-col justify-between min-h-[200px] cursor-pointer active:scale-[0.98] transition-transform"
+          onClick={() => priceInputRef.current?.focus()}
+          className="flex-1 bg-neutral-900 rounded-2xl p-4 flex flex-col justify-between min-h-[200px] cursor-text"
         >
           <div>
             <span className="text-neutral-400 text-xs font-medium">{dateLabel}</span>
             <div className="flex items-baseline gap-1 mt-1.5">
               <span className="text-white text-3xl font-bold">€</span>
-              <span className="text-white text-3xl font-bold">{editPrice || "0"}</span>
+              <input
+                ref={priceInputRef}
+                type="number"
+                inputMode="numeric"
+                value={editPrice}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val.length <= 6) setEditPrice(val);
+                }}
+                placeholder="0"
+                className="text-white text-3xl font-bold bg-transparent border-none outline-none w-20 p-0 placeholder:text-neutral-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              />
             </div>
             <span className="text-neutral-500 text-[11px] mt-1.5 block">Έξυπνη τιμολόγηση</span>
           </div>
@@ -168,18 +178,6 @@ const CalendarOverlay = ({
           </button>
         </div>
       </div>
-
-      {/* Full-screen price editor */}
-      <PriceEditOverlay
-        isOpen={showPriceEdit}
-        selectedDates={selectedDates}
-        initialPrice={editPrice}
-        onSave={(newPrice) => {
-          setEditPrice(newPrice);
-          setShowPriceEdit(false);
-        }}
-        onClose={() => setShowPriceEdit(false)}
-      />
     </div>
   );
 };
