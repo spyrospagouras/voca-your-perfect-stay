@@ -6,6 +6,7 @@ export interface Listing {
   lat: number;
   lng: number;
   image: string;
+  images?: string[];
   rating: number;
   reviews: number;
   type: string;
@@ -13,6 +14,7 @@ export interface Listing {
   bedrooms: number;
   beds: number;
   bathrooms: number;
+  city?: string;
 }
 
 export const mockListings: Listing[] = [

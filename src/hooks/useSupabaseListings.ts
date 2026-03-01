@@ -9,6 +9,10 @@ interface SearchParams {
 }
 
 function mapRow(row: any): Listing {
+  const coverImage = row.cover_image_url || (row.images && row.images[0]) || "/placeholder.svg";
+  const allImages: string[] = row.images && row.images.length > 0
+    ? row.images
+    : [coverImage];
   return {
     id: row.id,
     title: row.title || "",
@@ -16,7 +20,8 @@ function mapRow(row: any): Listing {
     price: Number(row.price_per_night) || 0,
     lat: Number(row.latitude) || 0,
     lng: Number(row.longitude) || 0,
-    image: row.cover_image_url || (row.images && row.images[0]) || "/placeholder.svg",
+    image: coverImage,
+    images: allImages,
     rating: Number(row.rating) || 0,
     reviews: 0,
     type: row.property_type || "Κατάλυμα",
@@ -24,6 +29,7 @@ function mapRow(row: any): Listing {
     bedrooms: row.bedrooms || 1,
     beds: row.beds || 1,
     bathrooms: row.bathrooms || 1,
+    city: row.city || "",
   };
 }
 
