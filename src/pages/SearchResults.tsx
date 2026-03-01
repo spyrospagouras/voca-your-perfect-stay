@@ -1,6 +1,8 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, SlidersHorizontal, MapIcon, Info } from "lucide-react";
+import { Search, SlidersHorizontal, MapIcon } from "lucide-react";
+import { format, parseISO } from "date-fns";
+import { el } from "date-fns/locale";
 import type { LatLngBounds } from "leaflet";
 import type { Listing } from "@/data/mockListings";
 import { usePhotonSearch } from "@/hooks/usePhotonSearch";
@@ -37,7 +39,6 @@ const SearchResults = () => {
 
   const { listings: allListings, loading, fetchListings } = useSupabaseListings();
 
-  // Fetch on mount
   useEffect(() => {
     fetchListings({ guests: guestsParam, checkIn, checkOut });
   }, [fetchListings, guestsParam, checkIn, checkOut]);
@@ -71,48 +72,74 @@ const SearchResults = () => {
     setActiveListing(listing.id);
   }, []);
 
+  // Build search summary for floating bar
+  let searchSummary = "";
+  if (checkIn && checkOut) {
+    try {
+      const d1 = parseISO(checkIn);
+      const d2 = parseISO(checkOut);
+      searchSummary = `${format(d1, "d MMM", { locale: el })} - ${format(d2, "d MMM", { locale: el })}`;
+    } catch {
+      searchSummary = "";
+    }
+  }
+  if (guestsParam > 0) {
+    searchSummary += searchSummary
+      ? ` · ${guestsParam} ${guestsParam === 1 ? "επισκέπτης" : "επισκέπτες"}`
+      : `${guestsParam} ${guestsParam === 1 ? "επισκέπτης" : "επισκέπτες"}`;
+  }
+
   const sheetHeader = (
     <div>
       <p className="text-base font-semibold text-foreground">
-        {loading ? "Φόρτωση..." : `${visibleListings.length} καταλύματα`}
+        {loading
+          ? "Φόρτωση..."
+          : visibleListings.length > 1000
+          ? "Πάνω από 1.000 καταλύματα"
+          : `${visibleListings.length} καταλύματα`}
       </p>
-      <button className="flex items-center gap-1 mt-0.5">
-        <span className="text-xs text-muted-foreground underline">
-          Πώς ταξινομούμε αποτελέσματα
-        </span>
-        <Info className="w-3 h-3 text-muted-foreground" />
-      </button>
     </div>
   );
 
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
-      {/* Header */}
-      <div className="bg-card border-b border-border px-4 py-3 flex items-center gap-3 shrink-0">
-        <button
-          onClick={() => navigate("/search")}
-          className="w-9 h-9 flex items-center justify-center rounded-full border border-border hover:bg-accent transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4 text-foreground" />
-        </button>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-foreground truncate">
-            {locationName || "Αποτελέσματα"}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {loading ? "Φόρτωση..." : `${visibleListings.length} καταλύματα`}
-          </p>
+      {/* Floating Search Bar */}
+      <div className="absolute top-0 left-0 right-0 z-[1001] px-4 pt-3 pb-2 pointer-events-none">
+        <div className="flex items-center gap-2 pointer-events-auto max-w-lg mx-auto md:max-w-none md:mx-0">
+          <button
+            onClick={() => navigate("/search")}
+            className="flex-1 flex items-center gap-3 bg-card border border-border rounded-full px-4 py-2.5 shadow-lg hover:shadow-xl transition-shadow"
+          >
+            <Search className="w-4 h-4 text-foreground shrink-0" />
+            <div className="flex-1 min-w-0 text-left">
+              <p className="text-sm font-medium text-foreground truncate">
+                {locationName || "Αναζήτηση"}
+              </p>
+              {searchSummary && (
+                <p className="text-xs text-muted-foreground truncate">{searchSummary}</p>
+              )}
+            </div>
+          </button>
+          <button className="w-10 h-10 flex items-center justify-center rounded-full bg-card border border-border shadow-lg hover:shadow-xl transition-shadow shrink-0">
+            <SlidersHorizontal className="w-4 h-4 text-foreground" />
+          </button>
         </div>
-        <button className="w-9 h-9 flex items-center justify-center rounded-full border border-border hover:bg-accent transition-colors">
-          <SlidersHorizontal className="w-4 h-4 text-foreground" />
-        </button>
       </div>
 
       {/* Main content area */}
       <div className="flex-1 flex overflow-hidden relative">
         {/* Desktop: listings sidebar */}
-        <div className="hidden md:flex flex-col w-[400px] lg:w-[440px] border-r border-border overflow-y-auto">
-          {visibleListings.length === 0 ? (
+        <div className="hidden md:flex flex-col w-[400px] lg:w-[440px] border-r border-border overflow-y-auto pt-16">
+          <div className="px-4 pb-2">
+            <p className="text-sm font-semibold text-foreground">
+              {loading
+                ? "Φόρτωση..."
+                : visibleListings.length > 1000
+                ? "Πάνω από 1.000 καταλύματα"
+                : `${visibleListings.length} καταλύματα`}
+            </p>
+          </div>
+          {visibleListings.length === 0 && !loading ? (
             <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
               <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
                 <MapIcon className="w-8 h-8 text-muted-foreground" />
@@ -125,7 +152,7 @@ const SearchResults = () => {
               </p>
             </div>
           ) : (
-            <div className="p-3 space-y-1">
+            <div className="p-3 grid grid-cols-1 gap-3">
               {visibleListings.map((listing) => (
                 <ListingCard
                   key={listing.id}
@@ -155,7 +182,7 @@ const SearchResults = () => {
 
         {/* Mobile: Bottom Sheet */}
         <BottomSheet headerContent={sheetHeader} collapsedHeight={220} bottomOffset={64}>
-          {visibleListings.length === 0 ? (
+          {visibleListings.length === 0 && !loading ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
                 <MapIcon className="w-8 h-8 text-muted-foreground" />
