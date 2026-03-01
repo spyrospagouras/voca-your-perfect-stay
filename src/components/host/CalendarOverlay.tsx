@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { el } from "date-fns/locale";
-import { X, Check, Plus, Pencil } from "lucide-react";
+import { X, Check, Plus, Pencil, Square, CheckSquare } from "lucide-react";
 
 interface CalendarOverlayProps {
   selectedDates: Date[];
@@ -55,14 +55,6 @@ const CalendarOverlay = ({
       ? format(first, "d MMM", { locale: el })
       : `${format(first, "d", { locale: el })}-${format(last, "d MMM", { locale: el })}`;
 
-  const statusLabel = editAvailable
-    ? "Διαθέσιμο"
-    : "Δεν υπάρχει διαθεσιμότητα";
-
-  const reasonLabel = !editAvailable
-    ? blockReason || "Αποκλείστηκε από εσάς"
-    : null;
-
   return (
     <div
       className="fixed bottom-0 left-0 right-0 z-50 px-3 pb-4 pt-2 pointer-events-none"
@@ -74,43 +66,67 @@ const CalendarOverlay = ({
     >
       <div className="pointer-events-auto max-w-lg mx-auto flex gap-2">
         {/* Left Card – Status */}
-        <div className="flex-1 bg-neutral-900 rounded-2xl p-4 flex flex-col justify-between min-h-[170px]">
+        <div className="flex-1 bg-neutral-900 rounded-2xl p-4 flex flex-col justify-between min-h-[200px]">
           <div>
-            <button
-              onClick={() => setEditAvailable(!editAvailable)}
-              className="flex items-center gap-2 mb-1"
-            >
+            {/* Status indicator */}
+            <div className="flex items-center gap-2 mb-3">
               <span
                 className={`w-2.5 h-2.5 rounded-full shrink-0 ${
                   editAvailable ? "bg-emerald-400" : "bg-red-500"
                 }`}
               />
               <span className="text-white text-[13px] font-medium leading-tight">
-                {statusLabel}
+                {editAvailable ? "Διαθέσιμο" : "Μη διαθέσιμο"}
               </span>
-            </button>
+            </div>
 
-            {reasonLabel && (
-              <span className="text-neutral-500 text-xs ml-[18px] block">{reasonLabel}</span>
-            )}
-
+            {/* Note section */}
             {showNote ? (
               <textarea
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="Γράψτε μια σημείωση..."
-                className="w-full bg-neutral-800 text-white text-xs rounded-lg p-2 mt-2 resize-none h-14 border-none outline-none placeholder:text-neutral-500"
+                className="w-full bg-neutral-800 text-white text-xs rounded-lg p-2 mb-3 resize-none h-14 border-none outline-none placeholder:text-neutral-500"
                 autoFocus
               />
             ) : (
               <button
                 onClick={() => setShowNote(true)}
-                className="flex items-center gap-1 text-neutral-400 text-xs mt-2 hover:text-neutral-300 transition-colors"
+                className="flex items-center gap-1.5 mb-3 hover:opacity-80 transition-opacity"
               >
-                <Pencil className="w-3 h-3" />
-                <span className="underline">Προσθέστε μια σημείωση</span>
+                <Pencil className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="text-cyan-400 text-xs underline">Προσθέστε μια σημείωση</span>
               </button>
             )}
+
+            {/* Availability checkboxes */}
+            <button
+              onClick={() => setEditAvailable(true)}
+              className="flex items-center gap-2 w-full py-1.5 hover:opacity-80 transition-opacity"
+            >
+              {editAvailable ? (
+                <CheckSquare className="w-4 h-4 text-white" />
+              ) : (
+                <Square className="w-4 h-4 text-neutral-500" />
+              )}
+              <span className={`text-xs ${editAvailable ? "text-white font-medium" : "text-neutral-400"}`}>
+                Άνοιγμα Διαθεσιμότητας
+              </span>
+            </button>
+
+            <button
+              onClick={() => setEditAvailable(false)}
+              className="flex items-center gap-2 w-full py-1.5 hover:opacity-80 transition-opacity"
+            >
+              {!editAvailable ? (
+                <CheckSquare className="w-4 h-4 text-white" />
+              ) : (
+                <Square className="w-4 h-4 text-neutral-500" />
+              )}
+              <span className={`text-xs ${!editAvailable ? "text-white font-medium" : "text-neutral-400"}`}>
+                Κλείσιμο Διαθεσιμότητας
+              </span>
+            </button>
           </div>
 
           <div className="flex items-center gap-3 mt-3">
