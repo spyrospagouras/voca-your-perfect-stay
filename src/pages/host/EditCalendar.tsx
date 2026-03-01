@@ -98,7 +98,7 @@ const EditCalendar = () => {
           ? String(listing.price_per_night)
           : ""
       );
-      setEditAvailable(entry ? !entry.is_blocked : true);
+      setEditAvailable(entry ? !entry.is_blocked : false);
       setBlockReason(entry?.is_blocked ? "Αποκλείστηκε από εσάς" : "");
       setNote("");
     } else {
@@ -208,13 +208,14 @@ const EditCalendar = () => {
                   const date = new Date(year, month, day);
                   const dateKey = format(date, "yyyy-MM-dd");
                   const entry = availMap.get(dateKey);
-                  const isBlocked = entry?.is_blocked === true;
+                  // Default: blocked unless explicitly opened (is_blocked === false)
+                  const isOpen = entry?.is_blocked === false;
+                  const isBlocked = !isOpen;
                   const price = entry?.price ?? defaultPrice;
                   const isToday = isSameDay(date, today);
                   const isPast = isBefore(date, today);
                   const selected = isSelected(date);
 
-                  // Check if in-range (between first and last selected)
                   let inRange = false;
                   if (selectedDates.length >= 2) {
                     const sorted = [...selectedDates].sort((a, b) => a.getTime() - b.getTime());
@@ -226,20 +227,28 @@ const EditCalendar = () => {
                       key={i}
                       ref={isToday ? todayRef : undefined}
                       onClick={() => !isPast && handleDayClick(date)}
-                      className={`aspect-square flex flex-col items-center justify-center rounded-lg transition-colors relative cursor-pointer ${
-                        isPast ? "opacity-30 cursor-default" : "hover:bg-muted"
+                      className={`aspect-square flex flex-col items-center justify-center rounded-xl border transition-colors relative cursor-pointer ${
+                        isPast ? "opacity-30 cursor-default" : ""
                       } ${isToday && !selected ? "ring-2 ring-destructive" : ""} ${
-                        selected ? "bg-foreground" : inRange ? "bg-muted" : ""
+                        selected
+                          ? "bg-foreground border-foreground"
+                          : inRange
+                          ? "bg-muted border-border"
+                          : isOpen
+                          ? "bg-white dark:bg-background border-border"
+                          : "bg-neutral-100 dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700"
                       }`}
                     >
                       <span
-                        className={`text-sm font-medium ${
+                        className={`text-sm font-semibold ${
                           selected
                             ? "text-background"
                             : isToday
                             ? "bg-destructive text-destructive-foreground w-7 h-7 rounded-full flex items-center justify-center"
+                            : isBlocked
+                            ? "line-through text-muted-foreground"
                             : "text-foreground"
-                        } ${isBlocked && !selected ? "line-through text-muted-foreground" : ""}`}
+                        }`}
                       >
                         {day}
                       </span>
@@ -247,7 +256,7 @@ const EditCalendar = () => {
                         <span
                           className={`text-[10px] mt-0.5 ${
                             isBlocked
-                              ? "line-through text-muted-foreground/60"
+                              ? "text-muted-foreground/60"
                               : entry?.price != null && entry.price !== defaultPrice
                               ? "text-primary font-semibold"
                               : "text-muted-foreground"
