@@ -274,17 +274,27 @@ const EditCalendar = () => {
         })}
       </div>
 
-      {/* Floating Today Button – hide when overlay is visible */}
+      {/* Floating Footer Buttons – hide when overlay is visible */}
       {!hasSelection && (
-        <div className="fixed bottom-6 right-4 z-40">
-          <button
-            onClick={scrollToToday}
-            className="flex items-center gap-2 bg-foreground text-background px-4 py-2.5 rounded-full shadow-lg hover:bg-foreground/90 transition-colors"
-          >
-            <ArrowUp className="w-4 h-4" />
-            <span className="text-sm font-medium">Σήμερα</span>
-          </button>
-        </div>
+        <>
+          <div className="fixed bottom-6 left-4 z-40">
+            <button
+              onClick={scrollToToday}
+              className="flex items-center gap-2 bg-foreground text-background px-4 py-2.5 rounded-full shadow-lg hover:bg-foreground/90 transition-colors"
+            >
+              <ArrowUp className="w-4 h-4" />
+              <span className="text-sm font-medium">Σήμερα</span>
+            </button>
+          </div>
+          <div className="fixed bottom-6 right-4 z-40">
+            <button
+              onClick={() => navigate(`/host/edit/${id}`)}
+              className="flex items-center gap-2 bg-foreground text-background px-4 py-2.5 rounded-full shadow-lg hover:bg-foreground/90 transition-colors"
+            >
+              <span className="text-sm font-medium">Επόμενο</span>
+            </button>
+          </div>
+        </>
       )}
 
       {/* Floating Bottom Overlay */}
