@@ -13,6 +13,9 @@ interface Props {
   onChange: (basics: Basics) => void;
   onNext: () => void;
   onBack: () => void;
+  privacyType?: string;
+  hasBedroomLock?: boolean | null;
+  onLockChange?: (val: boolean) => void;
 }
 
 const rows: { key: keyof Basics; label: string; min: number }[] = [
@@ -22,12 +25,15 @@ const rows: { key: keyof Basics; label: string; min: number }[] = [
   { key: "bathrooms", label: "Μπάνια", min: 1 },
 ];
 
-const StepBasics = ({ basics, onChange, onNext, onBack }: Props) => {
+const StepBasics = ({ basics, onChange, onNext, onBack, privacyType, hasBedroomLock, onLockChange }: Props) => {
   const update = (key: keyof Basics, delta: number) => {
     const row = rows.find((r) => r.key === key)!;
     const val = Math.max(row.min, basics[key] + delta);
     onChange({ ...basics, [key]: val });
   };
+
+  const isPrivateRoom = privacyType === "private";
+  const nextDisabled = isPrivateRoom && hasBedroomLock === null;
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -69,9 +75,47 @@ const StepBasics = ({ basics, onChange, onNext, onBack }: Props) => {
             );
           })}
         </div>
+
+        {/* Lock question for private rooms */}
+        {isPrivateRoom && (
+          <div className="mt-8">
+            <h2 className="text-lg font-semibold text-foreground mb-4">
+              Υπάρχει κλειδαριά σε κάθε υπνοδωμάτιο;
+            </h2>
+            <div className="flex flex-col gap-3">
+              {[
+                { label: "Ναι", value: true },
+                { label: "Όχι", value: false },
+              ].map((opt) => (
+                <button
+                  key={opt.label}
+                  onClick={() => onLockChange?.(opt.value)}
+                  className={`flex items-center justify-between w-full px-5 py-4 rounded-xl border-2 transition-all ${
+                    hasBedroomLock === opt.value
+                      ? "border-foreground bg-muted"
+                      : "border-border hover:border-muted-foreground/40"
+                  }`}
+                >
+                  <span className="text-base font-medium text-foreground">{opt.label}</span>
+                  <div
+                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                      hasBedroomLock === opt.value
+                        ? "border-foreground"
+                        : "border-muted-foreground/40"
+                    }`}
+                  >
+                    {hasBedroomLock === opt.value && (
+                      <div className="w-3 h-3 rounded-full bg-foreground" />
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
-      <OnboardingFooter onBack={onBack} onNext={onNext} progress={70} />
+      <OnboardingFooter onBack={onBack} onNext={onNext} nextDisabled={nextDisabled} progress={70} />
     </div>
   );
 };

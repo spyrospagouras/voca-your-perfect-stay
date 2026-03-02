@@ -1,0 +1,1 @@
+ALTER TABLE public.listings ADD COLUMN has_bedroom_lock boolean DEFAULT NULL;

@@ -128,6 +128,7 @@ const PartnerOnboarding = () => {
   const [pricePerNight, setPricePerNight] = useState(draft?.pricePerNight || 50);
   const [bookingType, setBookingType] = useState(draft?.bookingType || "");
   const [termsAccepted, setTermsAccepted] = useState(draft?.termsAccepted || false);
+  const [hasBedroomLock, setHasBedroomLock] = useState<boolean | null>(draft?.hasBedroomLock ?? null);
   const [contactData, setContactData] = useState({
     contactMobile: draft?.contactMobile || "",
     contactLandline: draft?.contactLandline || "",
@@ -166,6 +167,7 @@ const PartnerOnboarding = () => {
           description,
           pricePerNight,
           bookingType,
+          hasBedroomLock,
           contactMobile: contactData.contactMobile,
           contactLandline: contactData.contactLandline,
           contactEmail: contactData.contactEmail,
@@ -176,7 +178,7 @@ const PartnerOnboarding = () => {
         })
       );
     }
-  }, [step, category, privacyType, address, lat, lng, street, zip, city, showExact, basics, amenities, photos, listingTitle, highlights, description, pricePerNight, bookingType, contactData]);
+  }, [step, category, privacyType, address, lat, lng, street, zip, city, showExact, basics, amenities, photos, listingTitle, highlights, description, pricePerNight, bookingType, hasBedroomLock, contactData]);
 
   // --- Supabase draft sync helpers ---
   const upsertDraft = async (extraFields: Record<string, any> = {}) => {
@@ -207,6 +209,7 @@ const PartnerOnboarding = () => {
       highlights: highlights.length > 0 ? highlights : [],
       price_per_night: pricePerNight > 0 ? pricePerNight : null,
       booking_type: bookingType || null,
+      has_bedroom_lock: privacyType === "private" ? hasBedroomLock : null,
       contact_mobile: contactData.contactMobile || null,
       contact_landline: contactData.contactLandline || null,
       contact_email: contactData.contactEmail || null,
@@ -395,6 +398,9 @@ const PartnerOnboarding = () => {
           onChange={setBasics}
           onNext={() => goNextFrom("basics")}
           onBack={goBack}
+          privacyType={privacyType}
+          hasBedroomLock={hasBedroomLock}
+          onLockChange={setHasBedroomLock}
         />
       )}
 
