@@ -121,15 +121,15 @@ const SearchResults = () => {
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
       {/* Floating Search Bar */}
       <div className="absolute top-0 left-0 right-0 z-[1001] px-4 pt-3 pb-2 pointer-events-none">
-        <div className="flex items-center gap-2 pointer-events-auto max-w-lg mx-auto md:max-w-none md:mx-0">
+        <div className="flex items-center gap-2 pointer-events-auto w-full">
           <button
             onClick={() => navigate("/search")}
-            className="flex-1 flex items-center gap-3 bg-card border border-border rounded-full px-4 py-2.5 shadow-lg hover:shadow-xl transition-shadow"
+            className="flex-1 min-w-0 flex items-center gap-3 bg-card border border-border rounded-full px-4 py-2.5 shadow-lg hover:shadow-xl transition-shadow overflow-hidden"
           >
             <Search className="w-4 h-4 text-foreground shrink-0" />
             <div className="flex-1 min-w-0 text-left">
               <p className="text-sm font-medium text-foreground truncate">
-                {locationName || "Αναζήτηση"}
+                {locationName || "Πού θέλετε να πάτε;"}
               </p>
               {searchSummary && (
                 <p className="text-xs text-muted-foreground truncate">{searchSummary}</p>
@@ -139,6 +139,7 @@ const SearchResults = () => {
           <button
             onClick={() => setShowFilters(true)}
             className="w-10 h-10 flex items-center justify-center rounded-full bg-card border border-border shadow-lg hover:shadow-xl transition-shadow shrink-0"
+            aria-label="Φίλτρα"
           >
             <SlidersHorizontal className="w-4 h-4 text-foreground" />
           </button>
