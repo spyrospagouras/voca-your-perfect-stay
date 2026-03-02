@@ -13,6 +13,7 @@ import StepAddressConfirm from "@/components/onboarding/StepAddressConfirm";
 import StepPrivacyToggle from "@/components/onboarding/StepPrivacyToggle";
 import StepPinRefine from "@/components/onboarding/StepPinRefine";
 import StepBasics from "@/components/onboarding/StepBasics";
+import StepBathrooms from "@/components/onboarding/StepBathrooms";
 import StepIntro2 from "@/components/onboarding/StepIntro2";
 import StepAmenities from "@/components/onboarding/StepAmenities";
 import StepPhotos from "@/components/onboarding/StepPhotos";
@@ -48,6 +49,7 @@ type Step =
   | "privacy-toggle"
   | "pin-refine"
   | "basics"
+  | "bathrooms"
   | "intro2"
   | "amenities"
   | "photos"
@@ -71,6 +73,30 @@ const BASE_FLOW: Step[] = [
   "privacy-toggle",
   "pin-refine",
   "basics",
+  "intro2",
+  "amenities",
+  "photos",
+  "title",
+  "highlights",
+  "description",
+  "intro3",
+  "pricing",
+  "review",
+  "intro4",
+  "booking-type",
+];
+
+const PRIVATE_FLOW: Step[] = [
+  "landing",
+  "intro",
+  "category",
+  "privacy",
+  "location",
+  "address",
+  "privacy-toggle",
+  "pin-refine",
+  "basics",
+  "bathrooms",
   "intro2",
   "amenities",
   "photos",
@@ -129,6 +155,11 @@ const PartnerOnboarding = () => {
   const [bookingType, setBookingType] = useState(draft?.bookingType || "");
   const [termsAccepted, setTermsAccepted] = useState(draft?.termsAccepted || false);
   const [hasBedroomLock, setHasBedroomLock] = useState<boolean | null>(draft?.hasBedroomLock ?? null);
+  const [bathroomData, setBathroomData] = useState({
+    privateEnsuite: draft?.privateEnsuite || 0,
+    privateHallway: draft?.privateHallway || 0,
+    shared: draft?.shared || 0,
+  });
   const [contactData, setContactData] = useState({
     contactMobile: draft?.contactMobile || "",
     contactLandline: draft?.contactLandline || "",
@@ -138,10 +169,11 @@ const PartnerOnboarding = () => {
     contactInstagram: draft?.contactInstagram || "",
   });
 
-  // Dynamic flow: add contact-info after booking-type for listing_only
+  // Dynamic flow
+  const baseFlow = privacyType === "private" ? PRIVATE_FLOW : BASE_FLOW;
   const FLOW: Step[] = bookingType === "listing_only"
-    ? [...BASE_FLOW, "contact-info"]
-    : BASE_FLOW;
+    ? [...baseFlow, "contact-info"]
+    : baseFlow;
 
   // Persist draft to localStorage
   useEffect(() => {
@@ -168,6 +200,9 @@ const PartnerOnboarding = () => {
           pricePerNight,
           bookingType,
           hasBedroomLock,
+          privateEnsuite: bathroomData.privateEnsuite,
+          privateHallway: bathroomData.privateHallway,
+          shared: bathroomData.shared,
           contactMobile: contactData.contactMobile,
           contactLandline: contactData.contactLandline,
           contactEmail: contactData.contactEmail,
@@ -178,7 +213,7 @@ const PartnerOnboarding = () => {
         })
       );
     }
-  }, [step, category, privacyType, address, lat, lng, street, zip, city, showExact, basics, amenities, photos, listingTitle, highlights, description, pricePerNight, bookingType, hasBedroomLock, contactData]);
+  }, [step, category, privacyType, address, lat, lng, street, zip, city, showExact, basics, amenities, photos, listingTitle, highlights, description, pricePerNight, bookingType, hasBedroomLock, bathroomData, contactData]);
 
   // --- Supabase draft sync helpers ---
   const upsertDraft = async (extraFields: Record<string, any> = {}) => {
@@ -210,6 +245,9 @@ const PartnerOnboarding = () => {
       price_per_night: pricePerNight > 0 ? pricePerNight : null,
       booking_type: bookingType || null,
       has_bedroom_lock: privacyType === "private" ? hasBedroomLock : null,
+      private_ensuite_bathrooms: privacyType === "private" ? bathroomData.privateEnsuite : 0,
+      private_hallway_bathrooms: privacyType === "private" ? bathroomData.privateHallway : 0,
+      shared_bathrooms: privacyType === "private" ? bathroomData.shared : 0,
       contact_mobile: contactData.contactMobile || null,
       contact_landline: contactData.contactLandline || null,
       contact_email: contactData.contactEmail || null,
@@ -253,7 +291,7 @@ const PartnerOnboarding = () => {
     setStep("intro");
   };
 
-  const DATA_STEPS: Step[] = ["category", "privacy", "location", "address", "privacy-toggle", "pin-refine", "basics", "amenities", "photos", "title", "highlights", "description", "pricing", "booking-type", "contact-info"];
+  const DATA_STEPS: Step[] = ["category", "privacy", "location", "address", "privacy-toggle", "pin-refine", "basics", "bathrooms", "amenities", "photos", "title", "highlights", "description", "pricing", "booking-type", "contact-info"];
 
   const goNextFrom = async (current: Step) => {
     const idx = FLOW.indexOf(current);
@@ -401,6 +439,15 @@ const PartnerOnboarding = () => {
           privacyType={privacyType}
           hasBedroomLock={hasBedroomLock}
           onLockChange={setHasBedroomLock}
+        />
+      )}
+
+      {step === "bathrooms" && (
+        <StepBathrooms
+          data={bathroomData}
+          onChange={setBathroomData}
+          onNext={() => goNextFrom("bathrooms")}
+          onBack={goBack}
         />
       )}
 
