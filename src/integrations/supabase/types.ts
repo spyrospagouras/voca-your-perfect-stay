@@ -148,6 +148,7 @@ export type Database = {
           cover_image_url: string | null
           created_at: string | null
           description: string | null
+          has_bedroom_lock: boolean | null
           highlights: string[] | null
           host_id: string | null
           id: string
@@ -189,6 +190,7 @@ export type Database = {
           cover_image_url?: string | null
           created_at?: string | null
           description?: string | null
+          has_bedroom_lock?: boolean | null
           highlights?: string[] | null
           host_id?: string | null
           id?: string
@@ -230,6 +232,7 @@ export type Database = {
           cover_image_url?: string | null
           created_at?: string | null
           description?: string | null
+          has_bedroom_lock?: boolean | null
           highlights?: string[] | null
           host_id?: string | null
           id?: string
@@ -428,6 +431,7 @@ export type Database = {
           cover_image_url: string | null
           created_at: string | null
           description: string | null
+          has_bedroom_lock: boolean | null
           highlights: string[] | null
           host_id: string | null
           id: string
