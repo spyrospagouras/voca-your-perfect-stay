@@ -159,8 +159,11 @@ export type Database = {
           max_guests: number
           price_per_night: number | null
           privacy_type: string | null
+          private_ensuite_bathrooms: number
+          private_hallway_bathrooms: number
           property_type: string | null
           rating: number | null
+          shared_bathrooms: number
           show_exact_location: boolean
           status: string
           street: string | null
@@ -201,8 +204,11 @@ export type Database = {
           max_guests?: number
           price_per_night?: number | null
           privacy_type?: string | null
+          private_ensuite_bathrooms?: number
+          private_hallway_bathrooms?: number
           property_type?: string | null
           rating?: number | null
+          shared_bathrooms?: number
           show_exact_location?: boolean
           status?: string
           street?: string | null
@@ -243,8 +249,11 @@ export type Database = {
           max_guests?: number
           price_per_night?: number | null
           privacy_type?: string | null
+          private_ensuite_bathrooms?: number
+          private_hallway_bathrooms?: number
           property_type?: string | null
           rating?: number | null
+          shared_bathrooms?: number
           show_exact_location?: boolean
           status?: string
           street?: string | null
@@ -442,8 +451,11 @@ export type Database = {
           max_guests: number
           price_per_night: number | null
           privacy_type: string | null
+          private_ensuite_bathrooms: number
+          private_hallway_bathrooms: number
           property_type: string | null
           rating: number | null
+          shared_bathrooms: number
           show_exact_location: boolean
           status: string
           street: string | null
