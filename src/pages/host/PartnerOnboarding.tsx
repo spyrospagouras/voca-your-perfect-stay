@@ -232,6 +232,7 @@ const PartnerOnboarding = () => {
       host_id: currentUser.id,
       status: "draft",
       property_type: category || null,
+      property_sub_type: propertySubType || null,
       privacy_type: privacyType || null,
       location_name: address || null,
       latitude: lat,
