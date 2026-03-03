@@ -161,6 +161,7 @@ export type Database = {
           privacy_type: string | null
           private_ensuite_bathrooms: number
           private_hallway_bathrooms: number
+          property_sub_type: string | null
           property_type: string | null
           rating: number | null
           shared_bathrooms: number
@@ -206,6 +207,7 @@ export type Database = {
           privacy_type?: string | null
           private_ensuite_bathrooms?: number
           private_hallway_bathrooms?: number
+          property_sub_type?: string | null
           property_type?: string | null
           rating?: number | null
           shared_bathrooms?: number
@@ -251,6 +253,7 @@ export type Database = {
           privacy_type?: string | null
           private_ensuite_bathrooms?: number
           private_hallway_bathrooms?: number
+          property_sub_type?: string | null
           property_type?: string | null
           rating?: number | null
           shared_bathrooms?: number
@@ -453,6 +456,7 @@ export type Database = {
           privacy_type: string | null
           private_ensuite_bathrooms: number
           private_hallway_bathrooms: number
+          property_sub_type: string | null
           property_type: string | null
           rating: number | null
           shared_bathrooms: number
