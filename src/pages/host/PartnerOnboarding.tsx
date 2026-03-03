@@ -7,6 +7,7 @@ import HostLanding from "@/components/onboarding/HostLanding";
 import AuthModal from "@/components/onboarding/AuthModal";
 import StepIntro from "@/components/onboarding/StepIntro";
 import StepCategory from "@/components/onboarding/StepCategory";
+import StepPropertyType from "@/components/onboarding/StepPropertyType";
 import StepPrivacyType from "@/components/onboarding/StepPrivacyType";
 import StepLocation from "@/components/onboarding/StepLocation";
 import StepAddressConfirm from "@/components/onboarding/StepAddressConfirm";
@@ -39,10 +40,13 @@ export interface OnboardingData {
   propertySubType: string;
 }
 
+// Keep Step type updated
+
 type Step =
   | "landing"
   | "intro"
   | "category"
+  | "property-type"
   | "privacy"
   | "location"
   | "address"
@@ -67,6 +71,7 @@ const BASE_FLOW: Step[] = [
   "landing",
   "intro",
   "category",
+  "property-type",
   "privacy",
   "location",
   "address",
@@ -90,6 +95,7 @@ const PRIVATE_FLOW: Step[] = [
   "landing",
   "intro",
   "category",
+  "property-type",
   "privacy",
   "location",
   "address",
@@ -135,6 +141,7 @@ const PartnerOnboarding = () => {
 
   // Listing data
   const [category, setCategory] = useState(draft?.category || "");
+  const [propertySubType, setPropertySubType] = useState(draft?.propertySubType || "");
   const [privacyType, setPrivacyType] = useState(draft?.privacyType || "");
   const [address, setAddress] = useState(draft?.address || "");
   const [lat, setLat] = useState(draft?.lat ?? 37.9838);
@@ -183,6 +190,7 @@ const PartnerOnboarding = () => {
         JSON.stringify({
           step,
           category,
+          propertySubType,
           privacyType,
           address,
           lat,
@@ -291,7 +299,7 @@ const PartnerOnboarding = () => {
     setStep("intro");
   };
 
-  const DATA_STEPS: Step[] = ["category", "privacy", "location", "address", "privacy-toggle", "pin-refine", "basics", "bathrooms", "amenities", "photos", "title", "highlights", "description", "pricing", "booking-type", "contact-info"];
+  const DATA_STEPS: Step[] = ["category", "property-type", "privacy", "location", "address", "privacy-toggle", "pin-refine", "basics", "bathrooms", "amenities", "photos", "title", "highlights", "description", "pricing", "booking-type", "contact-info"];
 
   const goNextFrom = async (current: Step) => {
     const idx = FLOW.indexOf(current);
@@ -363,8 +371,21 @@ const PartnerOnboarding = () => {
       {step === "category" && (
         <StepCategory
           selected={category}
-          onSelect={setCategory}
+          onSelect={(cat) => {
+            setCategory(cat);
+            setPropertySubType("");
+          }}
           onNext={() => goNextFrom("category")}
+          onBack={goBack}
+        />
+      )}
+
+      {step === "property-type" && (
+        <StepPropertyType
+          category={category}
+          selected={propertySubType}
+          onSelect={setPropertySubType}
+          onNext={() => goNextFrom("property-type")}
           onBack={goBack}
         />
       )}

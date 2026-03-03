@@ -1,139 +1,109 @@
-import { useState } from "react";
-import { Building2, Home, Hotel, TreePalm, ArrowLeft } from "lucide-react";
-import OnboardingHeader from "./OnboardingHeader";
+import OnboardingFooter from "./OnboardingFooter";
 
 interface Props {
-  onFinish: (propertyType: string, subType: string) => Promise<void>;
+  category: string;
+  selected: string;
+  onSelect: (subType: string) => void;
+  onNext: () => void;
   onBack: () => void;
 }
 
-const categories = [
-  {
-    id: "apartment",
-    label: "Διαμέρισμα",
-    icon: Building2,
-    subTypes: ["Διαμέρισμα", "Studio", "Loft", "Ρετιρέ"],
-  },
-  {
-    id: "house",
-    label: "Σπίτια",
-    icon: Home,
-    subTypes: ["Βίλα", "Σαλέ", "Μονοκατοικία", "Πάρκο διακοπών", "Αγροικία"],
-  },
-  {
-    id: "hotel",
-    label: "Ξενοδοχείο, B&B",
-    icon: Hotel,
-    subTypes: ["Ξενοδοχείο", "B&B", "Ξενώνας", "Hostel", "Resort"],
-  },
-  {
-    id: "alternative",
-    label: "Εναλλακτικά καταλύματα",
-    icon: TreePalm,
-    subTypes: ["Glamping", "Σκηνή", "Τροχόσπιτο", "Πλωτό κατάλυμα", "Δεντρόσπιτο"],
-  },
-];
+export const SUB_TYPES: Record<string, { id: string; label: string }[]> = {
+  house: [
+    { id: "detached", label: "Μονοκατοικία" },
+    { id: "semi-detached", label: "Μεζονέτα" },
+    { id: "townhouse", label: "Σπίτι σε σειρά" },
+  ],
+  apartment: [
+    { id: "apartment", label: "Διαμέρισμα" },
+    { id: "studio", label: "Studio" },
+    { id: "loft", label: "Loft" },
+    { id: "penthouse", label: "Ρετιρέ" },
+  ],
+  guesthouse: [
+    { id: "guesthouse", label: "Ξενώνας" },
+    { id: "bnb", label: "B&B" },
+    { id: "hostel", label: "Hostel" },
+  ],
+  hotel: [
+    { id: "hotel", label: "Ξενοδοχείο" },
+    { id: "boutique", label: "Boutique Hotel" },
+    { id: "resort", label: "Resort" },
+  ],
+  cabin: [
+    { id: "cabin", label: "Εξοχικό σπίτι" },
+    { id: "chalet", label: "Σαλέ" },
+    { id: "farmhouse", label: "Αγροικία" },
+  ],
+  villa: [
+    { id: "villa", label: "Βίλα" },
+    { id: "luxury-villa", label: "Πολυτελής βίλα" },
+  ],
+  barn: [
+    { id: "barn", label: "Αποθήκη" },
+    { id: "converted-barn", label: "Ανακαινισμένη αποθήκη" },
+  ],
+  camping: [
+    { id: "tent", label: "Σκηνή" },
+    { id: "glamping", label: "Glamping" },
+    { id: "rv", label: "Τροχόσπιτο" },
+  ],
+  boat: [
+    { id: "sailboat", label: "Ιστιοπλοϊκό" },
+    { id: "motorboat", label: "Μηχανοκίνητο" },
+    { id: "houseboat", label: "Πλωτό σπίτι" },
+  ],
+};
 
-const StepPropertyType = ({ onFinish, onBack }: Props) => {
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedSub, setSelectedSub] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+const StepPropertyType = ({ category, selected, onSelect, onNext, onBack }: Props) => {
+  const options = SUB_TYPES[category] || [];
 
-  const activeCategory = categories.find((c) => c.id === selectedCategory);
-
-  const handleFinish = async () => {
-    if (!selectedCategory) return;
-    setLoading(true);
-    const cat = categories.find((c) => c.id === selectedCategory);
-    await onFinish(cat?.label || "", selectedSub || "");
-    setLoading(false);
-  };
-
-  // Sub-type selection view
-  if (activeCategory) {
-    return (
-      <div className="flex flex-col min-h-screen">
-        <OnboardingHeader
-          onBack={() => {
-            setSelectedCategory(null);
-            setSelectedSub(null);
-          }}
-          title={activeCategory.label}
-        />
-
-        <div className="flex-1 px-6 pt-8">
-          <h2 className="text-xl font-bold text-foreground mb-2">
-            Τι είδος είναι το κατάλυμά σας;
-          </h2>
-          <p className="text-sm text-muted-foreground mb-6">
-            Επιλέξτε τον τύπο που ταιριάζει καλύτερα
-          </p>
-
-          <div className="space-y-3">
-            {activeCategory.subTypes.map((sub) => (
-              <button
-                key={sub}
-                onClick={() => setSelectedSub(sub)}
-                className={`w-full text-left px-4 py-4 rounded-xl border transition-all text-sm font-medium ${
-                  selectedSub === sub
-                    ? "border-[hsl(217,91%,60%)] bg-[hsl(217,91%,60%)]/5 text-foreground"
-                    : "border-border hover:border-muted-foreground/30 text-foreground"
-                }`}
-              >
-                {sub}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="p-6 border-t border-border">
-          <button
-            onClick={handleFinish}
-            disabled={!selectedSub || loading}
-            className="w-full h-12 rounded-xl font-semibold text-sm transition-colors disabled:opacity-40"
-            style={{
-              backgroundColor: `hsl(217, 91%, 60%)`,
-              color: "white",
-            }}
-          >
-            {loading ? "Αποθήκευση..." : "Συνεχίστε"}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Category selection view
   return (
     <div className="flex flex-col min-h-screen">
-      <OnboardingHeader onBack={onBack} title="Τύπος καταλύματος" />
-
-      <div className="flex-1 px-6 pt-8">
-        <h2 className="text-xl font-bold text-foreground mb-2">
-          Ποια κατηγορία περιγράφει καλύτερα το κατάλυμά σας;
-        </h2>
+      <div className="flex-1 px-6 pt-10 max-w-lg mx-auto w-full">
+        <p className="text-sm font-semibold text-muted-foreground mb-2">Βήμα 1</p>
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+          Τι είδος είναι το κατάλυμά σας;
+        </h1>
         <p className="text-sm text-muted-foreground mb-8">
-          Επιλέξτε μία κατηγορία για να συνεχίσετε
+          Επιλέξτε τον τύπο που ταιριάζει καλύτερα
         </p>
 
-        <div className="grid grid-cols-2 gap-4">
-          {categories.map((cat) => {
-            const Icon = cat.icon;
+        <div className="space-y-3">
+          {options.map((opt) => {
+            const isSelected = selected === opt.id;
             return (
               <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                className="flex flex-col items-center gap-3 p-6 rounded-2xl border border-border hover:border-muted-foreground/30 hover:shadow-sm transition-all text-center"
+                key={opt.id}
+                onClick={() => onSelect(opt.id)}
+                className={`w-full flex items-center justify-between px-5 py-4 rounded-xl border-2 transition-all text-sm font-medium ${
+                  isSelected
+                    ? "border-foreground bg-muted"
+                    : "border-border hover:border-muted-foreground/40"
+                }`}
               >
-                <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center">
-                  <Icon className="w-6 h-6 text-foreground" />
-                </div>
-                <span className="text-sm font-medium text-foreground">{cat.label}</span>
+                <span className={isSelected ? "text-foreground" : "text-muted-foreground"}>
+                  {opt.label}
+                </span>
+                <span
+                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                    isSelected ? "border-foreground" : "border-muted-foreground/40"
+                  }`}
+                >
+                  {isSelected && <span className="w-2.5 h-2.5 rounded-full bg-foreground" />}
+                </span>
               </button>
             );
           })}
         </div>
       </div>
+
+      <OnboardingFooter
+        onBack={onBack}
+        onNext={onNext}
+        nextDisabled={!selected}
+        progress={22}
+      />
     </div>
   );
 };
