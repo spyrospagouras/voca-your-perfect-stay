@@ -21,7 +21,7 @@ const COUNTRY_CODES = [
   { code: "+359", country: "BG", flag: "🇧🇬" },
 ];
 
-type Step = "options" | "phone" | "otp";
+type Step = "options" | "email" | "phone" | "otp";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -31,6 +31,9 @@ const Login = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const fullPhone = `${countryCode.code}${phoneNumber.replace(/\s/g, "")}`;
 
