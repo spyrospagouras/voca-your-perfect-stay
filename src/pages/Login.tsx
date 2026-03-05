@@ -45,6 +45,36 @@ const Login = () => {
     if (error) toast.error(error.message);
   };
 
+  const handleEmailLogin = async () => {
+    if (!email.trim() || !password) {
+      toast.error("Συμπληρώστε email και κωδικό");
+      return;
+    }
+    setLoading(true);
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+    setLoading(false);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Καλώς ήρθατε!");
+      if (data.user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", data.user.id)
+          .maybeSingle();
+        if (!profile?.full_name) {
+          navigate("/host/onboarding");
+        } else {
+          navigate("/");
+        }
+      }
+    }
+  };
+
   const handleSendOtp = async () => {
     if (phoneNumber.length < 8) {
       toast.error("Εισάγετε έγκυρο αριθμό τηλεφώνου");
