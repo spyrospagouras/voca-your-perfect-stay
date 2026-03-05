@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { Camera, ImagePlus, X, MessageCircleQuestion } from "lucide-react";
 import {
   DndContext,
@@ -11,11 +11,12 @@ import {
 import {
   SortableContext,
   rectSortingStrategy,
-  arrayMove,
 } from "@dnd-kit/sortable";
 import { supabase } from "@/integrations/supabase/client";
+import { useListingImageUpload } from "@/hooks/useListingImageUpload";
 import OnboardingFooter from "./OnboardingFooter";
 import SortablePhoto from "./SortablePhoto";
+import UploadProgressBar from "@/components/shared/UploadProgressBar";
 
 interface Props {
   photos: string[];
@@ -27,75 +28,63 @@ interface Props {
 
 const MIN_PHOTOS = 5;
 
+interface UploadedImage {
+  id: string;
+  url: string;
+  order_index: number;
+}
+
 const StepPhotos = ({ photos, onChange, listingId, onNext, onBack }: Props) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [images, setImages] = useState<UploadedImage[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
-  const uploadFiles = useCallback(
-    async (files: FileList | File[]) => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
+  // Load existing images from listing_images table
+  useEffect(() => {
+    if (!listingId) { setLoaded(true); return; }
+    (async () => {
+      const { data } = await supabase
+        .from("listing_images")
+        .select("id, url, order_index")
+        .eq("listing_id", listingId)
+        .order("order_index");
+      if (data) setImages(data);
+      setLoaded(true);
+    })();
+  }, [listingId]);
 
-      setUploading(true);
-      const newUrls: string[] = [];
-
-      for (const file of Array.from(files)) {
-        if (!file.type.startsWith("image/")) continue;
-        const folder = listingId || "temp";
-        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-        const path = `${folder}/${Date.now()}-${safeName}`;
-        const { error } = await supabase.storage
-          .from("listing-photos")
-          .upload(path, file, { upsert: false });
-
-        if (!error) {
-          const { data } = supabase.storage
-            .from("listing-photos")
-            .getPublicUrl(path);
-          newUrls.push(data.publicUrl);
-        }
-      }
-
-      const updated = [...photos, ...newUrls];
-      onChange(updated);
-      autoSave(updated);
-      setUploading(false);
+  // Sync photo URLs back to parent
+  const handleImagesChange = useCallback(
+    (updated: UploadedImage[]) => {
+      setImages(updated);
+      onChange(updated.map((i) => i.url));
     },
-    [photos, onChange, listingId]
+    [onChange]
   );
 
-  const autoSave = useCallback(
-    async (updatedPhotos: string[]) => {
-      if (!listingId) return;
-      await supabase
-        .from("listings")
-        .update({
-          images: updatedPhotos,
-          cover_image_url: updatedPhotos[0] || "/placeholder.svg",
-        } as any)
-        .eq("id", listingId);
-    },
-    [listingId]
-  );
+  const { uploading, uploadProgress, uploadFiles, deleteImage, reorderImages } =
+    useListingImageUpload({
+      listingId,
+      existingImages: images,
+      onImagesChange: handleImagesChange,
+    });
+
+  const photoUrls = images.map((i) => i.url);
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       const { active, over } = event;
       if (!over || active.id === over.id) return;
-      const oldIndex = photos.indexOf(active.id as string);
-      const newIndex = photos.indexOf(over.id as string);
-      const reordered = arrayMove(photos, oldIndex, newIndex);
-      onChange(reordered);
-      autoSave(reordered);
+      const oldIndex = photoUrls.indexOf(active.id as string);
+      const newIndex = photoUrls.indexOf(over.id as string);
+      reorderImages(oldIndex, newIndex);
     },
-    [photos, onChange, autoSave]
+    [photoUrls, reorderImages]
   );
 
   const handleDrop = useCallback(
@@ -107,20 +96,10 @@ const StepPhotos = ({ photos, onChange, listingId, onNext, onBack }: Props) => {
     [uploadFiles]
   );
 
-  const removePhoto = useCallback(
-    (url: string) => {
-      const updated = photos.filter((p) => p !== url);
-      onChange(updated);
-      autoSave(updated);
-    },
-    [photos, onChange, autoSave]
-  );
-
-  const hasPhotos = photos.length > 0;
+  const hasPhotos = images.length > 0;
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      {/* Header with X and help bubble */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <button
           onClick={onBack}
@@ -136,6 +115,11 @@ const StepPhotos = ({ photos, onChange, listingId, onNext, onBack }: Props) => {
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 pt-6 pb-6 max-w-lg mx-auto w-full">
+        {uploadProgress && (
+          <div className="mb-4">
+            <UploadProgressBar current={uploadProgress.current} total={uploadProgress.total} />
+          </div>
+        )}
 
         {!hasPhotos ? (
           <>
@@ -147,12 +131,8 @@ const StepPhotos = ({ photos, onChange, listingId, onNext, onBack }: Props) => {
               από το Dashboard σας.
             </p>
 
-            {/* Empty upload zone */}
             <div
-              onDragOver={(e) => {
-                e.preventDefault();
-                setDragOver(true);
-              }}
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
               onDragLeave={() => setDragOver(false)}
               onDrop={handleDrop}
               onClick={() => inputRef.current?.click()}
@@ -177,34 +157,31 @@ const StepPhotos = ({ photos, onChange, listingId, onNext, onBack }: Props) => {
               Σύρετε για να αλλάξετε τη σειρά
             </p>
 
-            {/* Photo count */}
             <p className="text-xs text-muted-foreground mb-3">
-              {photos.length} / {MIN_PHOTOS} φωτογραφίες
-              {photos.length < MIN_PHOTOS && (
+              {images.length} / {MIN_PHOTOS} φωτογραφίες
+              {images.length < MIN_PHOTOS && (
                 <span className="text-destructive ml-1">
-                  — χρειάζεστε ακόμη {MIN_PHOTOS - photos.length}
+                  — χρειάζεστε ακόμη {MIN_PHOTOS - images.length}
                 </span>
               )}
             </p>
 
-            {/* Sortable grid */}
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
               onDragEnd={handleDragEnd}
             >
-              <SortableContext items={photos} strategy={rectSortingStrategy}>
+              <SortableContext items={photoUrls} strategy={rectSortingStrategy}>
                 <div className="grid grid-cols-2 gap-3">
-                  {photos.map((url, i) => (
+                  {images.map((img, i) => (
                     <SortablePhoto
-                      key={url}
-                      url={url}
+                      key={img.url}
+                      url={img.url}
                       index={i}
-                      onDelete={removePhoto}
+                      onDelete={deleteImage}
                     />
                   ))}
 
-                  {/* Add more card */}
                   <button
                     onClick={() => inputRef.current?.click()}
                     className="aspect-square rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-2 hover:border-foreground/40 transition-colors"
