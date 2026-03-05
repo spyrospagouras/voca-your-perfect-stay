@@ -12,14 +12,15 @@ import {
 import {
   SortableContext,
   rectSortingStrategy,
-  arrayMove,
 } from "@dnd-kit/sortable";
 import { supabase } from "@/integrations/supabase/client";
+import { useListingImageUpload } from "@/hooks/useListingImageUpload";
 import SortablePhoto from "@/components/onboarding/SortablePhoto";
 import OnboardingFooter from "@/components/onboarding/OnboardingFooter";
 import PhotoUploadSheet from "@/components/host/PhotoUploadSheet";
+import UploadProgressBar from "@/components/shared/UploadProgressBar";
 
-interface ListingImage {
+interface UploadedImage {
   id: string;
   url: string;
   order_index: number;
@@ -29,8 +30,7 @@ const EditListing = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const [images, setImages] = useState<ListingImage[]>([]);
-  const [uploading, setUploading] = useState(false);
+  const [images, setImages] = useState<UploadedImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -38,9 +38,6 @@ const EditListing = () => {
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
-  const photoUrls = images.map((img) => img.url);
-
-  // Fetch images from listing_images table
   useEffect(() => {
     if (!id) return;
     (async () => {
@@ -54,100 +51,24 @@ const EditListing = () => {
     })();
   }, [id]);
 
-  const syncCover = useCallback(
-    async (urls: string[]) => {
-      if (!id) return;
-      await supabase
-        .from("listings")
-        .update({ cover_image_url: urls[0] || "/placeholder.svg" } as any)
-        .eq("id", id);
-    },
-    [id]
-  );
+  const { uploading, uploadProgress, uploadFiles, deleteImage, reorderImages } =
+    useListingImageUpload({
+      listingId: id || null,
+      existingImages: images,
+      onImagesChange: setImages,
+    });
 
-  const uploadFiles = useCallback(
-    async (files: FileList | File[]) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user || !id) return;
-
-      setUploading(true);
-      const newImages: ListingImage[] = [];
-      let nextIndex = images.length;
-
-      for (const file of Array.from(files)) {
-        if (!file.type.startsWith("image/")) continue;
-        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-        const path = `${id}/${Date.now()}-${safeName}`;
-        const { error } = await supabase.storage
-          .from("listing-photos")
-          .upload(path, file, { upsert: false });
-
-        if (!error) {
-          const { data: urlData } = supabase.storage
-            .from("listing-photos")
-            .getPublicUrl(path);
-
-          const { data: row } = await supabase
-            .from("listing_images")
-            .insert({
-              listing_id: id,
-              url: urlData.publicUrl,
-              order_index: nextIndex,
-            })
-            .select("id, url, order_index")
-            .single();
-
-          if (row) {
-            newImages.push(row);
-            nextIndex++;
-          }
-        }
-      }
-
-      const updated = [...images, ...newImages];
-      setImages(updated);
-      syncCover(updated.map((i) => i.url));
-      setUploading(false);
-    },
-    [images, id, syncCover]
-  );
+  const photoUrls = images.map((img) => img.url);
 
   const handleDragEnd = useCallback(
-    async (event: DragEndEvent) => {
+    (event: DragEndEvent) => {
       const { active, over } = event;
-      if (!over || active.id === over.id || !id) return;
-
+      if (!over || active.id === over.id) return;
       const oldIndex = photoUrls.indexOf(active.id as string);
       const newIndex = photoUrls.indexOf(over.id as string);
-      const reordered = arrayMove(images, oldIndex, newIndex).map((img, i) => ({
-        ...img,
-        order_index: i,
-      }));
-      setImages(reordered);
-
-      // Batch update order_index
-      for (const img of reordered) {
-        await supabase
-          .from("listing_images")
-          .update({ order_index: img.order_index })
-          .eq("id", img.id);
-      }
-      syncCover(reordered.map((i) => i.url));
+      reorderImages(oldIndex, newIndex);
     },
-    [images, photoUrls, id, syncCover]
-  );
-
-  const removePhoto = useCallback(
-    async (url: string) => {
-      const img = images.find((i) => i.url === url);
-      if (!img) return;
-
-      await supabase.from("listing_images").delete().eq("id", img.id);
-      const updated = images.filter((i) => i.id !== img.id);
-      setImages(updated);
-      syncCover(updated.map((i) => i.url));
-    },
-    [images, syncCover]
+    [photoUrls, reorderImages]
   );
 
   const openSheet = () => setSheetOpen(true);
@@ -168,7 +89,6 @@ const EditListing = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <button
           onClick={handleBack}
@@ -184,6 +104,12 @@ const EditListing = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 pt-6 pb-6 max-w-lg mx-auto w-full">
+        {uploadProgress && (
+          <div className="mb-4">
+            <UploadProgressBar current={uploadProgress.current} total={uploadProgress.total} />
+          </div>
+        )}
+
         <div className="flex items-start justify-between mb-1">
           <h1 className="text-2xl font-bold text-foreground">
             Επιλέξτε τουλάχιστον 5 φωτογραφίες
@@ -199,9 +125,8 @@ const EditListing = () => {
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={photoUrls} strategy={rectSortingStrategy}>
             <div className="space-y-3">
-              {/* Slot 1: Cover */}
               {coverPhoto ? (
-                <SortablePhoto url={coverPhoto} index={0} onDelete={removePhoto} />
+                <SortablePhoto url={coverPhoto} index={0} onDelete={deleteImage} />
               ) : (
                 <div
                   onClick={openSheet}
@@ -212,10 +137,9 @@ const EditListing = () => {
                 </div>
               )}
 
-              {/* Slots 2-5 grid */}
               <div className="grid grid-cols-2 gap-3">
                 {secondaryPhotos.map((url, i) => (
-                  <SortablePhoto key={url} url={url} index={i + 1} onDelete={removePhoto} />
+                  <SortablePhoto key={url} url={url} index={i + 1} onDelete={deleteImage} />
                 ))}
 
                 {Array.from({ length: emptySecondaryCount }).map((_, i) => (
@@ -228,7 +152,6 @@ const EditListing = () => {
                   </div>
                 ))}
 
-                {/* Add more slot */}
                 <button
                   onClick={openSheet}
                   className="aspect-square rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-2 hover:border-foreground/40 transition-colors"
@@ -238,11 +161,10 @@ const EditListing = () => {
                 </button>
               </div>
 
-              {/* Extra photos beyond 4 */}
               {photoUrls.length > 4 && (
                 <div className="grid grid-cols-2 gap-3">
                   {photoUrls.slice(4).map((url, i) => (
-                    <SortablePhoto key={url} url={url} index={i + 4} onDelete={removePhoto} />
+                    <SortablePhoto key={url} url={url} index={i + 4} onDelete={deleteImage} />
                   ))}
                 </div>
               )}
