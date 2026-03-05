@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Phone, ChevronDown, ArrowLeft } from "lucide-react";
+import { Phone, ChevronDown, ArrowLeft, Mail, Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
@@ -21,7 +21,7 @@ const COUNTRY_CODES = [
   { code: "+359", country: "BG", flag: "🇧🇬" },
 ];
 
-type Step = "options" | "phone" | "otp";
+type Step = "options" | "email" | "phone" | "otp";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -31,6 +31,9 @@ const Login = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const fullPhone = `${countryCode.code}${phoneNumber.replace(/\s/g, "")}`;
 
@@ -40,6 +43,36 @@ const Login = () => {
       options: { redirectTo: `${window.location.origin}/` },
     });
     if (error) toast.error(error.message);
+  };
+
+  const handleEmailLogin = async () => {
+    if (!email.trim() || !password) {
+      toast.error("Συμπληρώστε email και κωδικό");
+      return;
+    }
+    setLoading(true);
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+    setLoading(false);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Καλώς ήρθατε!");
+      if (data.user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", data.user.id)
+          .maybeSingle();
+        if (!profile?.full_name) {
+          navigate("/host/onboarding");
+        } else {
+          navigate("/");
+        }
+      }
+    }
   };
 
   const handleSendOtp = async () => {
@@ -142,13 +175,90 @@ const Login = () => {
               <Phone className="w-5 h-5 shrink-0 text-foreground" />
               <span className="flex-1 text-left">Συνέχεια μέσω κινητού</span>
             </button>
+
+            {/* Email */}
+            <button
+              onClick={() => setStep("email")}
+              className="w-full flex items-center gap-3 h-14 px-5 rounded-2xl border border-border bg-card hover:bg-muted/60 transition-colors text-sm font-medium text-foreground"
+            >
+              <Mail className="w-5 h-5 shrink-0 text-foreground" />
+              <span className="flex-1 text-left">Συνέχεια μέσω email</span>
+            </button>
           </div>
 
-          <p className="text-center text-xs text-muted-foreground mt-10 leading-relaxed px-4">
+          <p className="text-center text-sm text-muted-foreground mt-8">
+            Δεν έχετε λογαριασμό;{" "}
+            <Link to="/signup" className="text-primary font-semibold">Εγγραφή</Link>
+          </p>
+
+          <p className="text-center text-xs text-muted-foreground mt-6 leading-relaxed px-4">
             Συνεχίζοντας, αποδέχεστε τους{" "}
             <a href="/terms" className="underline text-foreground">Όρους Χρήσης</a>{" "}
             και την{" "}
             <a href="/terms" className="underline text-foreground">Πολιτική Απορρήτου</a>.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // EMAIL LOGIN screen
+  if (step === "email") {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <div className="px-4 pt-4">
+          <button
+            onClick={() => setStep("options")}
+            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5 text-foreground" />
+          </button>
+        </div>
+
+        <div className="flex-1 px-6 pt-4">
+          <h2 className="text-2xl font-bold text-foreground mb-2">Σύνδεση μέσω email</h2>
+          <p className="text-muted-foreground text-sm mb-8">
+            Εισάγετε το email και τον κωδικό σας.
+          </p>
+
+          <div className="space-y-4 mb-6">
+            <Input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="h-14 rounded-xl text-base"
+              autoFocus
+            />
+            <div className="relative">
+              <Input
+                type={showPassword ? "text" : "password"}
+                placeholder="Κωδικός"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="h-14 rounded-xl text-base pr-12"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
+          </div>
+
+          <button
+            onClick={handleEmailLogin}
+            disabled={loading || !email.trim() || !password}
+            className="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-semibold text-base transition-colors disabled:opacity-40"
+          >
+            {loading ? "Σύνδεση..." : "Σύνδεση"}
+          </button>
+
+          <p className="text-center text-sm text-muted-foreground mt-6">
+            Δεν έχετε λογαριασμό;{" "}
+            <Link to="/signup" className="text-primary font-semibold">Εγγραφή</Link>
           </p>
         </div>
       </div>
