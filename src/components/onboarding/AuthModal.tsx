@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Phone, ArrowLeft, ChevronDown } from "lucide-react";
+import { Phone, ArrowLeft, ChevronDown, Mail } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
@@ -24,7 +24,7 @@ const COUNTRY_CODES = [
   { code: "+1", country: "US", flag: "🇺🇸" },
 ];
 
-type Mode = "options" | "phone" | "otp";
+type Mode = "options" | "phone" | "otp" | "email" | "email-sent";
 
 const AuthModal = ({ open, onOpenChange, onAuthSuccess }: Props) => {
   const navigate = useNavigate();
