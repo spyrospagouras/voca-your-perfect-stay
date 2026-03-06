@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Phone, ArrowLeft, ChevronDown } from "lucide-react";
+import { Phone, ArrowLeft, ChevronDown, Mail } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
@@ -24,7 +24,7 @@ const COUNTRY_CODES = [
   { code: "+1", country: "US", flag: "🇺🇸" },
 ];
 
-type Mode = "options" | "phone" | "otp";
+type Mode = "options" | "phone" | "otp" | "email" | "email-sent";
 
 const AuthModal = ({ open, onOpenChange, onAuthSuccess }: Props) => {
   const navigate = useNavigate();
@@ -33,6 +33,7 @@ const AuthModal = ({ open, onOpenChange, onAuthSuccess }: Props) => {
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [otp, setOtp] = useState("");
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
   const fullPhone = `${countryCode.code}${phoneNumber.replace(/\s/g, "")}`;
@@ -72,10 +73,26 @@ const AuthModal = ({ open, onOpenChange, onAuthSuccess }: Props) => {
     }
   };
 
+  const handleEmailMagicLink = async () => {
+    if (!email || !email.includes("@")) return;
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: `${window.location.origin}/host/onboarding` },
+    });
+    setLoading(false);
+    if (error) {
+      toast({ title: "Σφάλμα", description: error.message, variant: "destructive" });
+    } else {
+      setMode("email-sent");
+    }
+  };
+
   const resetState = () => {
     setMode("options");
     setPhoneNumber("");
     setOtp("");
+    setEmail("");
     setShowCountryPicker(false);
   };
 
@@ -84,7 +101,7 @@ const AuthModal = ({ open, onOpenChange, onAuthSuccess }: Props) => {
       <DialogContent className="sm:max-w-md p-0 gap-0 rounded-2xl overflow-hidden">
         <DialogHeader className="px-6 py-4 border-b border-border text-center">
           <DialogTitle className="text-base font-semibold">
-            {mode === "otp" ? "Επαλήθευση" : "Σύνδεση ή εγγραφή"}
+            {mode === "otp" ? "Επαλήθευση" : mode === "email-sent" ? "Έλεγχος email" : "Σύνδεση ή εγγραφή"}
           </DialogTitle>
         </DialogHeader>
 
@@ -120,6 +137,15 @@ const AuthModal = ({ open, onOpenChange, onAuthSuccess }: Props) => {
                     <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
                   </svg>
                   <span className="flex-1 text-left">Συνέχεια μέσω Apple</span>
+                </button>
+
+                {/* Email */}
+                <button
+                  onClick={() => setMode("email")}
+                  className="w-full flex items-center gap-3 h-12 px-4 rounded-lg border border-border hover:bg-muted/50 transition-colors text-sm font-medium text-foreground"
+                >
+                  <Mail className="w-5 h-5" />
+                  <span className="flex-1 text-left">Συνέχεια μέσω Email</span>
                 </button>
 
                 <div className="flex items-center gap-4">
@@ -228,6 +254,58 @@ const AuthModal = ({ open, onOpenChange, onAuthSuccess }: Props) => {
 
               <button onClick={handleSendOtp} disabled={loading} className="w-full text-sm text-primary font-semibold py-1">
                 Δεν λάβατε κωδικό; Αποστολή ξανά
+              </button>
+            </div>
+          )}
+          {mode === "email" && (
+            <div className="space-y-4">
+              <button onClick={() => setMode("options")} className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+                <ArrowLeft className="w-4 h-4" /> Πίσω
+              </button>
+              <h2 className="text-xl font-semibold text-foreground">Εισάγετε το email σας</h2>
+              <p className="text-sm text-muted-foreground">Θα σας στείλουμε έναν σύνδεσμο σύνδεσης.</p>
+
+              <Input
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="h-12 rounded-lg"
+                autoFocus
+              />
+
+              <button
+                onClick={handleEmailMagicLink}
+                disabled={loading || !email.includes("@")}
+                className="w-full h-12 rounded-lg bg-[hsl(var(--primary))] text-white font-semibold text-sm transition-colors disabled:opacity-40"
+              >
+                {loading ? "Αποστολή..." : "Συνέχεια"}
+              </button>
+            </div>
+          )}
+
+          {mode === "email-sent" && (
+            <div className="space-y-4 text-center">
+              <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <Mail className="w-6 h-6 text-primary" />
+              </div>
+              <h2 className="text-xl font-semibold text-foreground">Ελέγξτε το email σας</h2>
+              <p className="text-sm text-muted-foreground">
+                Σας στείλαμε έναν σύνδεσμο σύνδεσης στο{" "}
+                <span className="font-medium text-foreground">{email}</span>
+              </p>
+              <button
+                onClick={handleEmailMagicLink}
+                disabled={loading}
+                className="w-full text-sm text-primary font-semibold py-1"
+              >
+                Δεν λάβατε email; Αποστολή ξανά
+              </button>
+              <button
+                onClick={() => { setMode("options"); setEmail(""); }}
+                className="w-full text-sm text-muted-foreground hover:text-foreground py-1"
+              >
+                Χρήση άλλης μεθόδου
               </button>
             </div>
           )}
