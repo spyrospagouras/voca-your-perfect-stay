@@ -44,6 +44,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <AuthRedirectHandler />
           <Routes>
             {/* Auth Routes */}
             <Route path="/login" element={<Login />} />
