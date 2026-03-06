@@ -257,6 +257,58 @@ const AuthModal = ({ open, onOpenChange, onAuthSuccess }: Props) => {
               </button>
             </div>
           )}
+          {mode === "email" && (
+            <div className="space-y-4">
+              <button onClick={() => setMode("options")} className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+                <ArrowLeft className="w-4 h-4" /> Πίσω
+              </button>
+              <h2 className="text-xl font-semibold text-foreground">Εισάγετε το email σας</h2>
+              <p className="text-sm text-muted-foreground">Θα σας στείλουμε έναν σύνδεσμο σύνδεσης.</p>
+
+              <Input
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="h-12 rounded-lg"
+                autoFocus
+              />
+
+              <button
+                onClick={handleEmailMagicLink}
+                disabled={loading || !email.includes("@")}
+                className="w-full h-12 rounded-lg bg-[hsl(var(--primary))] text-white font-semibold text-sm transition-colors disabled:opacity-40"
+              >
+                {loading ? "Αποστολή..." : "Συνέχεια"}
+              </button>
+            </div>
+          )}
+
+          {mode === "email-sent" && (
+            <div className="space-y-4 text-center">
+              <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <Mail className="w-6 h-6 text-primary" />
+              </div>
+              <h2 className="text-xl font-semibold text-foreground">Ελέγξτε το email σας</h2>
+              <p className="text-sm text-muted-foreground">
+                Σας στείλαμε έναν σύνδεσμο σύνδεσης στο{" "}
+                <span className="font-medium text-foreground">{email}</span>
+              </p>
+              <button
+                onClick={handleEmailMagicLink}
+                disabled={loading}
+                className="w-full text-sm text-primary font-semibold py-1"
+              >
+                Δεν λάβατε email; Αποστολή ξανά
+              </button>
+              <button
+                onClick={() => { setMode("options"); setEmail(""); }}
+                className="w-full text-sm text-muted-foreground hover:text-foreground py-1"
+              >
+                Χρήση άλλης μεθόδου
+              </button>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
