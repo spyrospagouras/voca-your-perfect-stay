@@ -101,7 +101,7 @@ const AuthModal = ({ open, onOpenChange, onAuthSuccess }: Props) => {
       <DialogContent className="sm:max-w-md p-0 gap-0 rounded-2xl overflow-hidden">
         <DialogHeader className="px-6 py-4 border-b border-border text-center">
           <DialogTitle className="text-base font-semibold">
-            {mode === "otp" ? "Επαλήθευση" : "Σύνδεση ή εγγραφή"}
+            {mode === "otp" ? "Επαλήθευση" : mode === "email-sent" ? "Έλεγχος email" : "Σύνδεση ή εγγραφή"}
           </DialogTitle>
         </DialogHeader>
 
