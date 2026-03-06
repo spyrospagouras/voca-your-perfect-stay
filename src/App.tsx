@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import AuthRedirectHandler from "./components/auth/AuthRedirectHandler";
 import AppLayout from "./components/layout/AppLayout";
 import HostLayout from "./components/layout/HostLayout";
 import Index from "./pages/Index";
@@ -43,6 +44,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <AuthRedirectHandler />
           <Routes>
             {/* Auth Routes */}
             <Route path="/login" element={<Login />} />

@@ -7,6 +7,7 @@ interface AuthContextType {
   user: User | null;
   profile: { full_name: string | null; avatar_url: string | null; role: string | null; is_verified: boolean | null } | null;
   loading: boolean;
+  isEmailConfirmed: boolean;
   signOut: () => Promise<void>;
 }
 
@@ -15,6 +16,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   profile: null,
   loading: true,
+  isEmailConfirmed: false,
   signOut: async () => {},
 });
 
@@ -25,6 +27,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<AuthContextType["profile"]>(null);
   const [loading, setLoading] = useState(true);
+
+  const isEmailConfirmed = !!user?.email_confirmed_at;
 
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
@@ -38,7 +42,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     // Set up listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      (event, session) => {
+        console.log("[Auth] Event:", event, "User:", session?.user?.id);
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
@@ -72,7 +77,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, profile, loading, signOut }}>
+    <AuthContext.Provider value={{ session, user, profile, loading, isEmailConfirmed, signOut }}>
       {children}
     </AuthContext.Provider>
   );
