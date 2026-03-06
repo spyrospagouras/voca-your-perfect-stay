@@ -139,6 +139,15 @@ const AuthModal = ({ open, onOpenChange, onAuthSuccess }: Props) => {
                   <span className="flex-1 text-left">Συνέχεια μέσω Apple</span>
                 </button>
 
+                {/* Email */}
+                <button
+                  onClick={() => setMode("email")}
+                  className="w-full flex items-center gap-3 h-12 px-4 rounded-lg border border-border hover:bg-muted/50 transition-colors text-sm font-medium text-foreground"
+                >
+                  <Mail className="w-5 h-5" />
+                  <span className="flex-1 text-left">Συνέχεια μέσω Email</span>
+                </button>
+
                 <div className="flex items-center gap-4">
                   <div className="flex-1 h-px bg-border" />
                   <span className="text-xs text-muted-foreground">ή</span>
