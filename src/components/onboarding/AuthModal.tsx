@@ -33,6 +33,7 @@ const AuthModal = ({ open, onOpenChange, onAuthSuccess }: Props) => {
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [otp, setOtp] = useState("");
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
   const fullPhone = `${countryCode.code}${phoneNumber.replace(/\s/g, "")}`;
