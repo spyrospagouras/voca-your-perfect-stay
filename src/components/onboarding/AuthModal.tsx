@@ -73,10 +73,26 @@ const AuthModal = ({ open, onOpenChange, onAuthSuccess }: Props) => {
     }
   };
 
+  const handleEmailMagicLink = async () => {
+    if (!email || !email.includes("@")) return;
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: `${window.location.origin}/host/onboarding` },
+    });
+    setLoading(false);
+    if (error) {
+      toast({ title: "Σφάλμα", description: error.message, variant: "destructive" });
+    } else {
+      setMode("email-sent");
+    }
+  };
+
   const resetState = () => {
     setMode("options");
     setPhoneNumber("");
     setOtp("");
+    setEmail("");
     setShowCountryPicker(false);
   };
 
