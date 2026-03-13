@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import Signup from "@/pages/Signup";
-import AuthModal from "@/components/onboarding/AuthModal";
+
 import StepIntro from "@/components/onboarding/StepIntro";
 import StepCategory from "@/components/onboarding/StepCategory";
 import StepPropertyType from "@/components/onboarding/StepPropertyType";
