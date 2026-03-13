@@ -136,7 +136,7 @@ const PartnerOnboarding = () => {
   const [step, setStep] = useState<Step>(
     user ? (draft?.step && draft.step !== "landing" ? draft.step : "intro") : "landing"
   );
-  const [showAuth, setShowAuth] = useState(false);
+  
 
   // If user logs in while on landing, skip to intro
   useEffect(() => {
