@@ -583,11 +583,6 @@ const PartnerOnboarding = () => {
         />
       )}
 
-      <AuthModal
-        open={showAuth}
-        onOpenChange={setShowAuth}
-        onAuthSuccess={handleAuthSuccess}
-      />
     </div>
   );
 };
