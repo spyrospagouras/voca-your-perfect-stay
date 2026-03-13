@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, ChevronLeft } from "lucide-react";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -45,9 +45,15 @@ const Signup = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <div className="px-6 pt-12 pb-8">
-        <h1 className="text-3xl font-bold text-primary tracking-tight">VOCA</h1>
+      {/* Header with Back Button */}
+      <div className="flex items-start px-5 pt-5 pb-8">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center justify-center w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm border border-border/50 hover:bg-muted transition-colors"
+          aria-label="Πίσω"
+        >
+          <ChevronLeft className="w-5 h-5 text-foreground" />
+        </button>
       </div>
 
       <div className="flex-1 px-6">
