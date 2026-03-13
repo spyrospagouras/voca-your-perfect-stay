@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import HostLanding from "@/components/onboarding/HostLanding";
-import AuthModal from "@/components/onboarding/AuthModal";
+import Signup from "@/pages/Signup";
+
 import StepIntro from "@/components/onboarding/StepIntro";
 import StepCategory from "@/components/onboarding/StepCategory";
 import StepPropertyType from "@/components/onboarding/StepPropertyType";
@@ -134,9 +134,16 @@ const PartnerOnboarding = () => {
   const draftListingId = useRef<string | null>(draft?.listingId || null);
 
   const [step, setStep] = useState<Step>(
-    draft?.step && user ? draft.step : "landing"
+    user ? (draft?.step && draft.step !== "landing" ? draft.step : "intro") : "landing"
   );
-  const [showAuth, setShowAuth] = useState(false);
+  
+
+  // If user logs in while on landing, skip to intro
+  useEffect(() => {
+    if (user && step === "landing") {
+      setStep("intro");
+    }
+  }, [user]);
   const [saving, setSaving] = useState(false);
 
   // Listing data
@@ -289,17 +296,6 @@ const PartnerOnboarding = () => {
     }
   };
 
-  // --- Navigation ---
-  const handleStart = () => {
-    if (user) setStep("intro");
-    else setShowAuth(true);
-  };
-
-  const handleAuthSuccess = () => {
-    setShowAuth(false);
-    setStep("intro");
-  };
-
   const DATA_STEPS: Step[] = ["category", "property-type", "privacy", "location", "address", "privacy-toggle", "pin-refine", "basics", "bathrooms", "amenities", "photos", "title", "highlights", "description", "pricing", "booking-type", "contact-info"];
 
   const goNextFrom = async (current: Step) => {
@@ -365,7 +361,7 @@ const PartnerOnboarding = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {step === "landing" && <HostLanding onStart={handleStart} />}
+      {step === "landing" && <Signup />}
 
       {step === "intro" && <StepIntro onNext={() => goNextFrom("intro")} onBack={goBack} />}
 
@@ -587,11 +583,6 @@ const PartnerOnboarding = () => {
         />
       )}
 
-      <AuthModal
-        open={showAuth}
-        onOpenChange={setShowAuth}
-        onAuthSuccess={handleAuthSuccess}
-      />
     </div>
   );
 };
