@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Phone, ArrowLeft, ChevronDown, Mail } from "lucide-react";
+import { useState } from "react";
+import { Phone, ArrowLeft, ChevronDown, Mail, Eye, EyeOff } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
@@ -24,16 +23,18 @@ const COUNTRY_CODES = [
   { code: "+1", country: "US", flag: "🇺🇸" },
 ];
 
-type Mode = "options" | "phone" | "otp" | "email" | "email-sent";
+type Mode = "options" | "phone" | "otp" | "email";
 
 const AuthModal = ({ open, onOpenChange, onAuthSuccess }: Props) => {
-  const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>("options");
   const [countryCode, setCountryCode] = useState(COUNTRY_CODES[0]);
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [otp, setOtp] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const fullPhone = `${countryCode.code}${phoneNumber.replace(/\s/g, "")}`;
@@ -73,18 +74,46 @@ const AuthModal = ({ open, onOpenChange, onAuthSuccess }: Props) => {
     }
   };
 
-  const handleEmailMagicLink = async () => {
-    if (!email || !email.includes("@")) return;
+  const validatePassword = (pw: string) => {
+    return pw.length >= 6 && /[a-zA-Zα-ωΑ-Ω]/.test(pw) && /[0-9]/.test(pw);
+  };
+
+  const handleEmailAuth = async () => {
+    if (!email || !email.includes("@")) {
+      toast({ title: "Σφάλμα", description: "Εισάγετε ένα έγκυρο email", variant: "destructive" });
+      return;
+    }
+    if (!validatePassword(password)) {
+      toast({ title: "Σφάλμα", description: "Ο κωδικός πρέπει να έχει τουλάχιστον 6 χαρακτήρες με γράμματα και αριθμούς", variant: "destructive" });
+      return;
+    }
+
     setLoading(true);
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: `${window.location.origin}/host/onboarding` },
-    });
-    setLoading(false);
-    if (error) {
-      toast({ title: "Σφάλμα", description: error.message, variant: "destructive" });
+    if (isSignUp) {
+      const { error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/host/onboarding`,
+        },
+      });
+      setLoading(false);
+      if (error) {
+        toast({ title: "Σφάλμα", description: error.message, variant: "destructive" });
+      } else {
+        onAuthSuccess();
+      }
     } else {
-      setMode("email-sent");
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+      setLoading(false);
+      if (error) {
+        toast({ title: "Σφάλμα", description: error.message, variant: "destructive" });
+      } else {
+        onAuthSuccess();
+      }
     }
   };
 
@@ -93,6 +122,9 @@ const AuthModal = ({ open, onOpenChange, onAuthSuccess }: Props) => {
     setPhoneNumber("");
     setOtp("");
     setEmail("");
+    setPassword("");
+    setShowPassword(false);
+    setIsSignUp(false);
     setShowCountryPicker(false);
   };
 
@@ -101,7 +133,7 @@ const AuthModal = ({ open, onOpenChange, onAuthSuccess }: Props) => {
       <DialogContent className="sm:max-w-md p-0 gap-0 rounded-2xl overflow-hidden">
         <DialogHeader className="px-6 py-4 border-b border-border text-center">
           <DialogTitle className="text-base font-semibold">
-            {mode === "otp" ? "Επαλήθευση" : mode === "email-sent" ? "Έλεγχος email" : "Σύνδεση ή εγγραφή"}
+            {mode === "otp" ? "Επαλήθευση" : mode === "email" ? (isSignUp ? "Εγγραφή" : "Σύνδεση") : "Σύνδεση ή εγγραφή"}
           </DialogTitle>
         </DialogHeader>
 
@@ -257,56 +289,72 @@ const AuthModal = ({ open, onOpenChange, onAuthSuccess }: Props) => {
               </button>
             </div>
           )}
+
           {mode === "email" && (
             <div className="space-y-4">
               <button onClick={() => setMode("options")} className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
                 <ArrowLeft className="w-4 h-4" /> Πίσω
               </button>
-              <h2 className="text-xl font-semibold text-foreground">Εισάγετε το email σας</h2>
-              <p className="text-sm text-muted-foreground">Θα σας στείλουμε έναν σύνδεσμο σύνδεσης.</p>
+              <h2 className="text-xl font-semibold text-foreground">
+                {isSignUp ? "Δημιουργία λογαριασμού" : "Σύνδεση με email"}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {isSignUp ? "Εισάγετε τα στοιχεία σας για εγγραφή." : "Εισάγετε τα στοιχεία σας για σύνδεση."}
+              </p>
 
-              <Input
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-12 rounded-lg"
-                autoFocus
-              />
+              <div className="space-y-3">
+                <Input
+                  type="email"
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="h-12 rounded-lg"
+                  autoFocus
+                />
+
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Κωδικός (γράμματα & αριθμοί)"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="h-12 rounded-lg pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
 
               <button
-                onClick={handleEmailMagicLink}
-                disabled={loading || !email.includes("@")}
+                onClick={handleEmailAuth}
+                disabled={loading || !email.includes("@") || password.length < 6}
                 className="w-full h-12 rounded-lg bg-[hsl(var(--primary))] text-white font-semibold text-sm transition-colors disabled:opacity-40"
               >
-                {loading ? "Αποστολή..." : "Συνέχεια"}
+                {loading ? "Παρακαλώ περιμένετε..." : "Συνέχεια"}
               </button>
-            </div>
-          )}
 
-          {mode === "email-sent" && (
-            <div className="space-y-4 text-center">
-              <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <Mail className="w-6 h-6 text-primary" />
-              </div>
-              <h2 className="text-xl font-semibold text-foreground">Ελέγξτε το email σας</h2>
-              <p className="text-sm text-muted-foreground">
-                Σας στείλαμε έναν σύνδεσμο σύνδεσης στο{" "}
-                <span className="font-medium text-foreground">{email}</span>
+              <p className="text-center text-sm text-muted-foreground">
+                {isSignUp ? (
+                  <>
+                    Έχετε ήδη λογαριασμό;{" "}
+                    <button onClick={() => setIsSignUp(false)} className="text-primary font-semibold hover:underline">
+                      Σύνδεση
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    Δεν έχετε λογαριασμό;{" "}
+                    <button onClick={() => setIsSignUp(true)} className="text-primary font-semibold hover:underline">
+                      Εγγραφή
+                    </button>
+                  </>
+                )}
               </p>
-              <button
-                onClick={handleEmailMagicLink}
-                disabled={loading}
-                className="w-full text-sm text-primary font-semibold py-1"
-              >
-                Δεν λάβατε email; Αποστολή ξανά
-              </button>
-              <button
-                onClick={() => { setMode("options"); setEmail(""); }}
-                className="w-full text-sm text-muted-foreground hover:text-foreground py-1"
-              >
-                Χρήση άλλης μεθόδου
-              </button>
             </div>
           )}
         </div>
