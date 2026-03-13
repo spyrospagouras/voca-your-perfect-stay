@@ -296,17 +296,6 @@ const PartnerOnboarding = () => {
     }
   };
 
-  // --- Navigation ---
-  const handleStart = () => {
-    if (user) setStep("intro");
-    else setShowAuth(true);
-  };
-
-  const handleAuthSuccess = () => {
-    setShowAuth(false);
-    setStep("intro");
-  };
-
   const DATA_STEPS: Step[] = ["category", "property-type", "privacy", "location", "address", "privacy-toggle", "pin-refine", "basics", "bathrooms", "amenities", "photos", "title", "highlights", "description", "pricing", "booking-type", "contact-info"];
 
   const goNextFrom = async (current: Step) => {
