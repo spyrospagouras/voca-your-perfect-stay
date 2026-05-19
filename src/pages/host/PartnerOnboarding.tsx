@@ -134,16 +134,17 @@ const PartnerOnboarding = () => {
   const draftListingId = useRef<string | null>(draft?.listingId || null);
 
   const [step, setStep] = useState<Step>(
-    user ? (draft?.step && draft.step !== "landing" ? draft.step : "intro") : "landing"
+    draft?.step && draft.step !== "landing" ? draft.step : "intro"
   );
   
 
-  // If user logs in while on landing, skip to intro
+  // If user logs out, send them to signup
   useEffect(() => {
-    if (user && step === "landing") {
-      setStep("intro");
+    if (!user) {
+      navigate("/signup");
     }
-  }, [user]);
+  }, [user, navigate]);
+
   const [saving, setSaving] = useState(false);
 
   // Listing data
