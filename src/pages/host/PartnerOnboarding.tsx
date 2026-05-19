@@ -362,7 +362,7 @@ const PartnerOnboarding = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {step === "landing" && <Signup />}
+      
 
       {step === "intro" && <StepIntro onNext={() => goNextFrom("intro")} onBack={goBack} />}
 
