@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import Signup from "@/pages/Signup";
+
 
 import StepIntro from "@/components/onboarding/StepIntro";
 import StepCategory from "@/components/onboarding/StepCategory";
