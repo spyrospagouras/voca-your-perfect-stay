@@ -55,6 +55,7 @@ export default {
           inactive: "hsl(var(--nav-inactive))",
         },
         divider: "hsl(var(--divider))",
+        softYellow: "hsl(var(--soft-yellow))",
       },
       borderRadius: {
         lg: "var(--radius)",
