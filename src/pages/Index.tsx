@@ -64,9 +64,9 @@ const Index = () => {
   }, [handleObserver]);
 
   return (
-    <div className="bg-background min-h-full">
+    <div className="bg-soft-yellow min-h-full">
       {/* Sticky header */}
-      <div className="sticky top-0 z-30 bg-background">
+      <div className="sticky top-0 z-30 bg-soft-yellow">
         <SearchBar />
         <CategoryTabs />
       </div>
